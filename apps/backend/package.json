@@ -4,9 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --hot index.ts",
-    "start": "bun index.ts"
-  },
+  "dev": "bun --hot index.ts",
+  "start": "bun index.ts",
+  "build": "echo backend-build"
+},
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cors": "^2.8.19",
