@@ -1,0 +1,530 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import axios from "axios";
+import { BACKEND_URL } from "@/lib/config";
+import { toast } from "sonner";
+import { 
+  Cpu, Layers, Mic, FileText, Check, ArrowRight, 
+  Sparkles, Shield, Terminal, Award, Activity, TrendingUp, 
+  BarChart3, Globe, CheckCircle2, User, Loader2
+} from "lucide-react";
+
+// Local Github icon fallback for compatibility
+function Github({ className }: { className?: string }) {
+  return (
+    <svg 
+      className={className} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    >
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+      <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+  );
+}
+
+export function Form() {
+  const [github, setGithub] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const navigate = useNavigate();
+
+  // Validate GitHub URL format
+  function validateGithubUrl(url: string) {
+    if (!url) return "GitHub URL or username is required";
+    
+    // Accept user/repo or just username or full URL
+    const cleanUrl = url.trim();
+    if (cleanUrl.length < 2) return "Please enter a valid GitHub username or URL";
+    
+    return "";
+  }
+
+  // Handle Input Change
+  function handleGithubChange(val: string) {
+    setGithub(val);
+    if (validationError) {
+      setValidationError("");
+    }
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const error = validateGithubUrl(github);
+    if (error) {
+      setValidationError(error);
+      toast.error(error);
+      return;
+    }
+
+    setLoading(true);
+    // Extrapolate username if it's a full URL
+    let username = github.trim();
+    if (username.includes("github.com/")) {
+      const parts = username.split("github.com/");
+      if (parts[1]) {
+        const urlUsername = parts[1].split("/")[0];
+        if (urlUsername) {
+          username = urlUsername;
+        }
+      }
+    }
+
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/v1/pre-interview`, {
+        github: username
+      });
+      const interviewId = response.data.id;
+      if (interviewId) {
+        toast.success("Successfully fetched GitHub profile! Launching interview...", {
+          description: `Loaded profile for ${username}`
+        });
+        // Short delay to build excitement
+        setTimeout(() => {
+          navigate(`/interview/${interviewId}`);
+        }, 1500);
+      } else {
+        toast.error("Failed to initialize interview session.");
+        setLoading(false);
+      }
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.message || "Error scraping repository data. Ensure the user exists.";
+      toast.error(msg);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="relative min-h-screen bg-[#030014] overflow-x-hidden flex flex-col font-sans selection:bg-purple-600 selection:text-white">
+      {/* Background Grids & Orbs */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-100 pointer-events-none z-0" />
+      <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-purple-900/15 top-[-100px] left-[10%] pointer-events-none" />
+      <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-indigo-900/10 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
+      <div className="glow-orb animate-pulse-glow w-[400px] h-[400px] bg-violet-900/10 bottom-[10%] left-[20%] pointer-events-none" style={{ animationDelay: "4s" }} />
+
+      {/* Navigation Header */}
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 h-20 flex justify-between items-center border-b border-purple-950/20 backdrop-blur-xl bg-[#030014]/40">
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/30">
+            <Cpu className="h-5 w-5 text-white" />
+          </div>
+          <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+            DevPrep<span className="text-purple-500 font-semibold">.ai</span>
+          </span>
+        </div>
+        
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+          <a href="#features" className="hover:text-purple-400 transition-colors">Features</a>
+          <a href="#how-it-works" className="hover:text-purple-400 transition-colors">How it Works</a>
+          <a href="#simulator" className="hover:text-purple-400 transition-colors">Simulator</a>
+          <a href="#github-connect" className="text-purple-400 hover:text-purple-300 transition-colors font-semibold">Start Interview</a>
+        </nav>
+
+        <div>
+          <a 
+            href="#github-connect"
+            className="px-4 py-2 text-xs font-semibold rounded-xl bg-purple-900/40 border border-purple-500/30 hover:bg-purple-950/60 hover:border-purple-500/50 text-purple-300 transition-all shadow-md shadow-purple-550/10"
+          >
+            Start Free Practice
+          </a>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 py-12 md:py-20 flex flex-col gap-24">
+        
+        {/* HERO SECTION */}
+        <section className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 pt-4">
+          {/* Left Column: Heading and GitHub submission */}
+          <div className="flex-1 flex flex-col items-start text-left max-w-2xl">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/40 border border-purple-500/35 text-[11px] font-semibold text-purple-300 mb-6 tracking-wide shadow-inner shadow-purple-900/40 animate-float">
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              <span>Introducing DevPrep AI 1.0</span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] mb-6">
+              Your Personal AI <br />
+              <span className="bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-md">
+                Technical Interviewer
+              </span>
+            </h1>
+
+            {/* Paragraph description */}
+            <p className="text-slate-400 text-base sm:text-lg font-normal leading-relaxed mb-8">
+              Turn your GitHub repositories into high-fidelity technical mock interviews. 
+              Our AI scraper analyzes your codebase structure, understands your actual tech stack, 
+              and runs interactive voice-based simulations custom-built for your profile.
+            </p>
+
+            {/* Interactive GitHub URL Collector Card */}
+            <div id="github-connect" className="w-full bg-[#0d0925]/45 border border-purple-950/70 p-6 md:p-8 rounded-2xl backdrop-blur-xl shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.06)_0,transparent_50%)] pointer-events-none" />
+              
+              <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2">
+                <Github className="h-5 w-5 text-purple-400" />
+                Analyze Codebase & Start Mock Session
+              </h3>
+              <p className="text-slate-400 text-xs mb-6">
+                Enter your GitHub username or profile URL below. Our system builds a structural evaluation profile based on your public projects.
+              </p>
+
+              <form onSubmit={onSubmit} className="space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <span className="text-slate-500 text-xs font-semibold">github.com/</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={github}
+                    onChange={(e) => handleGithubChange(e.target.value)}
+                    placeholder="username"
+                    disabled={loading}
+                    className="w-full bg-[#060312] border border-purple-900/35 rounded-xl pl-[96px] pr-4 py-3.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/80 transition-all font-medium"
+                  />
+                </div>
+                {validationError && (
+                  <p className="text-red-400 text-xs font-semibold mt-1 flex items-center gap-1">
+                    ● {validationError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Analyzing Repositories...
+                    </>
+                  ) : (
+                    <>
+                      Generate Tailored Interview
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-purple-950/30 pt-4">
+                <span className="flex items-center gap-1.5">
+                  <Shield className="h-3 w-3 text-purple-500" />
+                  Public repos read-only
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3 w-3 text-purple-500" />
+                  Voice mock ready
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Activity className="h-3 w-3 text-purple-500" />
+                  Free 100% evaluated
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Visual Dashboard / Live Preview */}
+          <div id="simulator" className="flex-1 w-full lg:max-w-xl relative flex justify-center">
+            {/* Background glowing sphere behind container */}
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-purple-600 to-indigo-600 opacity-20 blur-xl animate-pulse-glow pointer-events-none" />
+
+            {/* Container */}
+            <div className="w-full bg-[#0b081b]/80 border border-purple-950/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl relative">
+              
+              {/* Fake Menu bar */}
+              <div className="bg-[#05030f]/60 px-4 py-3 border-b border-purple-950/40 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
+                </div>
+                <div className="text-[10px] text-purple-400 font-mono flex items-center gap-1.5 bg-[#030014] px-3 py-1 rounded-md border border-purple-950/30">
+                  <Terminal className="h-3 w-3 text-purple-400" />
+                  devprep-dashboard.ai
+                </div>
+                <div className="w-6" />
+              </div>
+
+              {/* Simulated UI Content */}
+              <div className="p-5 space-y-5">
+                {/* 1. Codebase Scanner Simulation */}
+                <div className="bg-[#04010b] border border-purple-900/10 p-4 rounded-xl font-mono text-xs text-slate-300 space-y-2.5 relative">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 text-[10px] text-purple-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-ping" />
+                    scanning...
+                  </div>
+                  
+                  <p className="text-purple-400 font-semibold flex items-center gap-1.5">
+                    <span>$</span> analyze --github-profile=vartika6451
+                  </p>
+                  
+                  <div className="space-y-1 text-slate-400 text-[11px] leading-relaxed">
+                    <p className="flex items-center gap-2">
+                      <span className="text-emerald-400">✓</span> Scraped 12 repositories
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-emerald-400">✓</span> Detected stack: React, TypeScript, Bun, SQLite
+                    </p>
+                    <p className="flex items-center gap-2 text-purple-300">
+                      <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+                      Generated 8 custom core mock questions
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Interactive Voice Orb Simulator */}
+                <div className="bg-gradient-to-b from-[#0e0928]/90 to-[#070417]/90 border border-purple-900/35 p-5 rounded-xl flex flex-col items-center text-center space-y-4 shadow-inner">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Voice Mock Session</p>
+                  
+                  {/* Glowing Animated Audio Orb */}
+                  <div className="relative flex items-center justify-center h-20 w-20">
+                    <div className="absolute inset-0 bg-purple-600/20 rounded-full animate-ping pointer-events-none" />
+                    <div className="absolute inset-2 bg-indigo-500/25 rounded-full blur-md animate-pulse-glow pointer-events-none" />
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 border border-purple-300/30 flex items-center justify-center text-white shadow-lg shadow-purple-600/30 hover:scale-[1.03] transition-transform cursor-pointer">
+                      <Mic className="h-6 w-6 text-white animate-pulse" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-white font-semibold flex items-center justify-center gap-1">
+                      <span>Interviewer AI</span> 
+                      <span className="bg-purple-900/80 text-purple-300 text-[9px] px-1.5 py-0.5 rounded border border-purple-600/20 font-mono">LIVE SPEECH</span>
+                    </p>
+                    <p className="text-[11px] text-slate-400 italic max-w-sm">
+                      "Explain your implementation of the rate-limiter middleware. How does it manage memory consumption under high load?"
+                    </p>
+                  </div>
+
+                  {/* Audio soundbar mimic */}
+                  <div className="flex justify-center items-center gap-1 w-2/3 h-5">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                      <span 
+                        key={i} 
+                        className={`w-0.5 rounded-full bg-purple-500 transition-all ${
+                          i % 3 === 0 ? "h-3" : i % 2 === 0 ? "h-4" : "h-2"
+                        } animate-pulse`} 
+                        style={{ animationDelay: `${i * 0.15}s`, animationDuration: "1s" }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Performance Scoring & Evaluation preview */}
+                <div className="bg-[#05030f] border border-purple-950/60 p-4 rounded-xl grid grid-cols-3 gap-3">
+                  <div className="flex flex-col items-center justify-center bg-[#0d0925]/50 border border-purple-950/40 p-2.5 rounded-lg text-center">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Score</span>
+                    <span className="text-lg font-extrabold text-purple-400 font-mono">87/100</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center bg-[#0d0925]/50 border border-purple-950/40 p-2.5 rounded-lg text-center">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Architecture</span>
+                    <span className="text-xs font-bold text-white">Advanced</span>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center bg-[#0d0925]/50 border border-purple-950/40 p-2.5 rounded-lg text-center">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Focus</span>
+                    <span className="text-[10px] font-bold text-indigo-300">Scalability</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* TRUST LOGO CLOUD */}
+        <section className="text-center space-y-6 pt-6 relative border-t border-purple-950/10">
+          <p className="text-[10px] sm:text-xs text-slate-500 font-bold tracking-[0.2em] uppercase">
+            Designed for engineers interviewing at elite organizations
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-35 hover:opacity-50 transition-opacity">
+            <span className="font-semibold text-sm sm:text-base text-slate-300 hover:text-white transition-colors cursor-default tracking-wide font-mono">Y Combinator</span>
+            <span className="font-semibold text-sm sm:text-base text-slate-300 hover:text-white transition-colors cursor-default tracking-wide font-mono">Vercel</span>
+            <span className="font-semibold text-sm sm:text-base text-slate-300 hover:text-white transition-colors cursor-default tracking-wide font-mono">Linear</span>
+            <span className="font-semibold text-sm sm:text-base text-slate-300 hover:text-white transition-colors cursor-default tracking-wide font-mono">Stripe</span>
+            <span className="font-semibold text-sm sm:text-base text-slate-300 hover:text-white transition-colors cursor-default tracking-wide font-mono">Perplexity</span>
+            <span className="font-semibold text-sm sm:text-base text-slate-300 hover:text-white transition-colors cursor-default tracking-wide font-mono">OpenAI</span>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS SECTION */}
+        <section id="how-it-works" className="space-y-16 py-8">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Turn Your Repositories Into Real Practice
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base">
+              A comprehensive three-stage assessment workflow built entirely around your engineering patterns.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Step 1 */}
+            <div className="bg-[#0b081b]/35 border border-purple-950/40 p-6 rounded-2xl relative space-y-4 hover:border-purple-800/40 transition-colors">
+              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-purple-900/40">01</div>
+              <div className="h-10 w-10 rounded-xl bg-purple-950/60 border border-purple-800/30 flex items-center justify-center text-purple-400">
+                <Github className="h-5 w-5" />
+              </div>
+              <h4 className="text-white font-bold text-base">Connect GitHub Profile</h4>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Provide your GitHub handle. Our AI builds a technical blueprint of your repositories, languages, and dependencies.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-[#0b081b]/35 border border-purple-950/40 p-6 rounded-2xl relative space-y-4 hover:border-purple-800/40 transition-colors">
+              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-purple-900/40">02</div>
+              <div className="h-10 w-10 rounded-xl bg-purple-950/60 border border-purple-800/30 flex items-center justify-center text-purple-400">
+                <Mic className="h-5 w-5" />
+              </div>
+              <h4 className="text-white font-bold text-base">Conduct Voice Interview</h4>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Engage in an interactive vocal mock session. The AI synthesizes logical follow-ups based on code quality and architecture decisions.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-[#0b081b]/35 border border-purple-950/40 p-6 rounded-2xl relative space-y-4 hover:border-purple-800/40 transition-colors">
+              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-purple-900/40">03</div>
+              <div className="h-10 w-10 rounded-xl bg-purple-950/60 border border-purple-800/30 flex items-center justify-center text-purple-400">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h4 className="text-white font-bold text-base">Hiring Evaluation Report</h4>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Receive detailed scorecards detailing algorithmic strength, system design choices, and targeted recommendations for improvement.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FEATURES GRID SECTION */}
+        <section id="features" className="space-y-16 py-8">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Engineered for High Trust & High Fidelity
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base">
+              Say goodbye to generic LeetCode puzzles. Practice interviews tailored to what you actually build.
+            </p>
+          </div>
+
+          {/* Bento-style Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+            
+            {/* Bento Card 1: AI Codebase Audit (Col Span 3) */}
+            <div className="md:col-span-3 bg-[#0b081b]/40 border border-purple-950/50 p-8 rounded-2xl flex flex-col justify-between hover:border-purple-800/30 transition-all border-glow-violet">
+              <div className="space-y-4">
+                <div className="h-9 w-9 rounded-lg bg-purple-900/30 flex items-center justify-center text-purple-400">
+                  <Cpu className="h-5 w-5" />
+                </div>
+                <h3 className="text-white font-bold text-lg">AI-Powered Stack Parsing</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Our system reviews directory structures, codebase dependencies, and specific implementations. It configures the interviewer engine to grill you on performance thresholds, stack gotchas, and refactoring techniques.
+                </p>
+              </div>
+              <div className="mt-8 border-t border-purple-950/30 pt-4 flex gap-4 text-[11px] text-slate-500 font-mono">
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-purple-500" /> AST parsing</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-purple-500" /> Dependency tracing</span>
+              </div>
+            </div>
+
+            {/* Bento Card 2: Voice simulation (Col Span 3) */}
+            <div className="md:col-span-3 bg-[#0b081b]/40 border border-purple-950/50 p-8 rounded-2xl flex flex-col justify-between hover:border-purple-800/30 transition-all border-glow-violet">
+              <div className="space-y-4">
+                <div className="h-9 w-9 rounded-lg bg-indigo-900/30 flex items-center justify-center text-indigo-400">
+                  <Mic className="h-5 w-5" />
+                </div>
+                <h3 className="text-white font-bold text-lg">Conversational Voice Mock</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Practice vocal responses in a natural environment. Integrated Speech Synthesis and Recognition lets you converse with the AI directly. Experience spontaneous, dynamically formulated follow-up questions tailored to your comments.
+                </p>
+              </div>
+              <div className="mt-8 border-t border-purple-950/30 pt-4 flex gap-4 text-[11px] text-slate-500 font-mono">
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-indigo-400" /> Natural Voice (TTS)</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-indigo-400" /> Audio wave visualizer</span>
+              </div>
+            </div>
+
+            {/* Bento Card 3: Performance Assessment scoring (Col Span 2) */}
+            <div className="md:col-span-2 bg-[#0b081b]/40 border border-purple-950/50 p-6 rounded-2xl flex flex-col justify-between hover:border-purple-800/30 transition-all border-glow-violet">
+              <div className="space-y-3">
+                <div className="h-8 w-8 rounded-lg bg-purple-900/30 flex items-center justify-center text-purple-400">
+                  <BarChart3 className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="text-white font-bold text-base">Hiring Scorecard</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Evaluate your performance with a standardized hiring-style report card covering Code Quality, Scalability, Algorithms, and verbal communication.
+                </p>
+              </div>
+            </div>
+
+            {/* Bento Card 4: Technical evaluation metrics (Col Span 2) */}
+            <div className="md:col-span-2 bg-[#0b081b]/40 border border-purple-950/50 p-6 rounded-2xl flex flex-col justify-between hover:border-purple-800/30 transition-all border-glow-violet">
+              <div className="space-y-3">
+                <div className="h-8 w-8 rounded-lg bg-violet-900/30 flex items-center justify-center text-violet-400">
+                  <TrendingUp className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="text-white font-bold text-base">Performance Analytics</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Understand your technical benchmarks. Find out whether your projects map to junior, mid-level, or senior hiring criteria.
+                </p>
+              </div>
+            </div>
+
+            {/* Bento Card 5: Improvement Areas (Col Span 2) */}
+            <div className="md:col-span-2 bg-[#0b081b]/40 border border-purple-950/50 p-6 rounded-2xl flex flex-col justify-between hover:border-purple-800/30 transition-all border-glow-violet">
+              <div className="space-y-3">
+                <div className="h-8 w-8 rounded-lg bg-indigo-900/30 flex items-center justify-center text-indigo-400">
+                  <Award className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="text-white font-bold text-base">Targeted Feedback</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Identify syntax weaknesses, gaps in testing coverage, and concurrency issues, and receive precise project recommendations.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full mt-24 border-t border-purple-950/20 bg-[#05030f]/60 backdrop-blur-md py-12">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-md shadow-purple-600/20">
+              <Cpu className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-bold text-md tracking-tight text-white">
+              DevPrep<span className="text-purple-500 font-semibold">.ai</span>
+            </span>
+          </div>
+
+          <p className="text-slate-500 text-xs font-medium">
+            © {new Date().getFullYear()} DevPrep.ai. All rights reserved. Premium Mock Sandbox.
+          </p>
+
+          <div className="flex items-center gap-6 text-xs text-slate-400 font-semibold">
+            <a href="#features" className="hover:text-purple-400 transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-purple-400 transition-colors">How it Works</a>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-500 flex items-center gap-1">
+              <Globe className="h-3.5 w-3.5 text-purple-500" />
+              US East Sandbox
+            </span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
