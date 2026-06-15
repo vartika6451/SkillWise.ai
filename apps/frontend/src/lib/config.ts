@@ -1,1 +1,1 @@
-export const BACKEND_URL = process.env.VITE_BACKEND_URL || "http://localhost:3001"; 
+export const BACKEND_URL = (typeof process !== "undefined" ? process.env.VITE_BACKEND_URL : undefined) || "http://localhost:3001"; 
