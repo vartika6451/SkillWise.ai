@@ -24,6 +24,7 @@ export function Interview() {
   // State definitions
   const [loading, setLoading] = useState(true);
   const [githubData, setGithubData] = useState<any>(null);
+  const [resumeData, setResumeData] = useState<any>(null);
   const [status, setStatus] = useState<"idle" | "greeting" | "listening" | "processing" | "speaking" | "assessing" | "completed">("idle");
   const [history, setHistory] = useState<QuestionLog[]>([]);
   const [transcript, setTranscript] = useState("");
@@ -47,6 +48,219 @@ export function Interview() {
   // Real-time HUD Metrics
   const [eyeContactIndex, setEyeContactIndex] = useState<number>(94);
   const [stanceState, setStanceState] = useState<string>("Attentive");
+
+  // Onboarding / Prep Readiness States
+  const [prepCameraStream, setPrepCameraStream] = useState<MediaStream | null>(null);
+  const [prepCameraStatus, setPrepCameraStatus] = useState<"loading" | "ready" | "denied" | "inactive">("inactive");
+  const [prepMicStatus, setPrepMicStatus] = useState<"loading" | "ready" | "denied">("loading");
+  const [prepSpeakerStatus, setPrepSpeakerStatus] = useState<"ready" | "loading">("ready");
+  const [prepFaceVisible, setPrepFaceVisible] = useState<"loading" | "ready" | "not-detected">("loading");
+  const [prepLighting, setPrepLighting] = useState<"loading" | "optimal" | "low-lighting">("loading");
+  const [prepMicLevel, setPrepMicLevel] = useState<number>(0);
+  const [prepAudioTestPlaying, setPrepAudioTestPlaying] = useState<boolean>(false);
+
+  // Prep Refs
+  const prepVideoRef = useRef<HTMLVideoElement | null>(null);
+  const prepCameraStreamRef = useRef<MediaStream | null>(null);
+  const prepAudioContextRef = useRef<AudioContext | null>(null);
+  const prepAnalyserRef = useRef<AnalyserNode | null>(null);
+  const prepAnimationFrameRef = useRef<number | null>(null);
+  const prepLightingIntervalRef = useRef<any>(null);
+
+  // Prep media stream and checks
+  const startPrepMedia = async () => {
+    setPrepCameraStatus("loading");
+    setPrepMicStatus("loading");
+    setPrepFaceVisible("loading");
+    setPrepLighting("loading");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 400, height: 300, facingMode: "user" },
+        audio: true
+      });
+      setPrepCameraStream(stream);
+      prepCameraStreamRef.current = stream;
+      setPrepCameraStatus("ready");
+      setPrepMicStatus("ready");
+      
+      // Bind video stream to preview
+      setTimeout(() => {
+        if (prepVideoRef.current) {
+          prepVideoRef.current.srcObject = stream;
+        }
+      }, 100);
+
+      // Start mic level monitoring
+      startPrepMicMonitoring(stream);
+      
+      // Start brightness and face check
+      startEnvironmentChecks();
+    } catch (err) {
+      console.error("Failed to access prep devices:", err);
+      setPrepCameraStatus("denied");
+      setPrepMicStatus("denied");
+      setPrepFaceVisible("not-detected");
+      setPrepLighting("low-lighting");
+      toast.error("Camera or microphone access denied. You can proceed, but readiness checklist will show warnings.");
+    }
+  };
+
+  const stopPrepMedia = () => {
+    stopPrepMicMonitoring();
+    stopEnvironmentChecks();
+    if (prepCameraStreamRef.current) {
+      prepCameraStreamRef.current.getTracks().forEach(track => track.stop());
+      prepCameraStreamRef.current = null;
+    }
+    setPrepCameraStream(null);
+    setPrepCameraStatus("inactive");
+  };
+
+  const startPrepMicMonitoring = (stream: MediaStream) => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioContext = new AudioContextClass();
+      prepAudioContextRef.current = audioContext;
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      prepAnalyserRef.current = analyser;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const updateVolume = () => {
+        if (!prepAnalyserRef.current) return;
+        prepAnalyserRef.current.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i] ?? 0;
+        }
+        const average = sum / bufferLength;
+        const level = Math.min(100, Math.round((average / 128) * 100));
+        setPrepMicLevel(level);
+        prepAnimationFrameRef.current = requestAnimationFrame(updateVolume);
+      };
+
+      updateVolume();
+    } catch (err) {
+      console.warn("Failed to initialize audio monitoring:", err);
+    }
+  };
+
+  const stopPrepMicMonitoring = () => {
+    if (prepAnimationFrameRef.current) {
+      cancelAnimationFrame(prepAnimationFrameRef.current);
+      prepAnimationFrameRef.current = null;
+    }
+    if (prepAudioContextRef.current) {
+      if (prepAudioContextRef.current.state !== "closed") {
+        prepAudioContextRef.current.close();
+      }
+      prepAudioContextRef.current = null;
+    }
+    prepAnalyserRef.current = null;
+  };
+
+  const startEnvironmentChecks = () => {
+    // Simulate initial calibration delay
+    setTimeout(() => {
+      setPrepFaceVisible("ready");
+    }, 1500);
+
+    // Dynamic light level check
+    const canvas = document.createElement("canvas");
+    canvas.width = 10;
+    canvas.height = 10;
+    const ctx = canvas.getContext("2d");
+
+    prepLightingIntervalRef.current = setInterval(() => {
+      if (!prepVideoRef.current || !ctx) return;
+      try {
+        ctx.drawImage(prepVideoRef.current, 0, 0, 10, 10);
+        const imgData = ctx.getImageData(0, 0, 10, 10);
+        let brightnessSum = 0;
+        for (let i = 0; i < imgData.data.length; i += 4) {
+          const r = imgData.data[i] ?? 0;
+          const g = imgData.data[i+1] ?? 0;
+          const b = imgData.data[i+2] ?? 0;
+          // Luminance formula
+          brightnessSum += (0.299 * r + 0.587 * g + 0.114 * b);
+        }
+        const avgBrightness = brightnessSum / (imgData.data.length / 4);
+        if (avgBrightness < 45) {
+          setPrepLighting("low-lighting");
+        } else {
+          setPrepLighting("optimal");
+        }
+      } catch (e) {
+        // Drawing might fail temporarily if stream not ready
+      }
+    }, 1000);
+  };
+
+  const stopEnvironmentChecks = () => {
+    if (prepLightingIntervalRef.current) {
+      clearInterval(prepLightingIntervalRef.current);
+      prepLightingIntervalRef.current = null;
+    }
+  };
+
+  const playSpeakerTestChime = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(523.25, now);
+      gain1.gain.setValueAtTime(0.1, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.4);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(783.99, now + 0.2);
+      gain2.gain.setValueAtTime(0.1, now + 0.2);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.2);
+      osc2.stop(now + 0.6);
+
+      setPrepAudioTestPlaying(true);
+      setTimeout(() => {
+        setPrepAudioTestPlaying(false);
+      }, 800);
+      toast.success("Playing speaker test chime...");
+    } catch (err) {
+      console.warn("Failed to play speaker test:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (status === "idle") {
+      startPrepMedia();
+    }
+    return () => {
+      stopPrepMicMonitoring();
+      stopEnvironmentChecks();
+      if (prepCameraStreamRef.current) {
+        prepCameraStreamRef.current.getTracks().forEach(track => track.stop());
+        prepCameraStreamRef.current = null;
+      }
+    };
+  }, [status]);
 
   // Refs for speech recognition and synthesis
   const recognitionRef = useRef<any>(null);
@@ -183,7 +397,8 @@ export function Interview() {
         return Math.max(88, Math.min(99, next));
       });
       const stances = ["Attentive", "Leaning In", "Focused", "Calming Stance", "Active Listening"];
-      setStanceState(stances[Math.floor(Math.random() * stances.length)]);
+      const selectedStance = stances[Math.floor(Math.random() * stances.length)];
+      setStanceState(selectedStance ?? "Attentive");
     }, 2500);
     return () => clearInterval(interval);
   }, [isCameraOn]);
@@ -224,6 +439,14 @@ export function Interview() {
               setGithubData(parsedGithub);
             } catch (err) {
               setGithubData(res.data.githubMetaData);
+            }
+          }
+          if (res.data.resumeMetaData) {
+            try {
+              const parsedResume = JSON.parse(res.data.resumeMetaData);
+              setResumeData(parsedResume);
+            } catch (err) {
+              setResumeData(res.data.resumeMetaData);
             }
           }
         }
@@ -291,15 +514,31 @@ export function Interview() {
 
   // Start the interview with greeting
   const startInterview = async () => {
+    stopPrepMedia();
     setErrorText("");
     setStatus("greeting");
     
-    let welcomeMessage = "Hello! I am your AI Technical Interviewer. I have analyzed your GitHub profile ";
-    if (githubData && githubData.name) {
-      welcomeMessage += `for ${githubData.name}. I see you have worked on some interesting repositories. `;
+    // Automatically start camera for expression coaching when interview starts
+    startCamera();
+    
+    const isArray = Array.isArray(githubData);
+    const firstRepo = isArray ? githubData[0] : null;
+    const login = isArray 
+      ? (firstRepo?.url ? firstRepo.url.split("github.com/")[1]?.split("/")[0] : null) 
+      : (githubData?.login || null);
+    
+    let welcomeMessage = "Hello! I am your AI Technical Interviewer. ";
+    if (login) {
+      welcomeMessage += `I have analyzed the GitHub profile for ${login}. `;
     } else {
-      welcomeMessage += "and code repositories. ";
+      welcomeMessage += "I have analyzed your GitHub profile and code repositories. ";
     }
+    
+    if (isArray && githubData.length > 0) {
+      const topRepos = githubData.slice(0, 2).map((r: any) => r.name).join(" and ");
+      welcomeMessage += `I see projects like ${topRepos} in your profile. `;
+    }
+    
     welcomeMessage += "Let's kick off the interview. To start, please introduce yourself and outline a challenging technical project you worked on recently.";
 
     setHistory([{
@@ -398,8 +637,8 @@ export function Interview() {
       }
     };
 
-    // Limit interview to 5 questions
-    const MAX_QUESTIONS = 5;
+    // Limit interview to 7 questions
+    const MAX_QUESTIONS = 7;
     if (nextCount >= MAX_QUESTIONS) {
       await saveQuestion();
       setIsAnalyzingFace(false);
@@ -410,22 +649,65 @@ export function Interview() {
     try {
       // Build a smart context-aware prompt for the AI interviewer
       const githubMetaText = githubData ? JSON.stringify(githubData).substring(0, 1000) : "Not available";
-      const fullPrompt = `You are a professional, friendly, and expert tech interviewer. 
-We are interviewing a candidate based on their Github metadata: ${githubMetaText}
+      const resumeMetaText = resumeData ? JSON.stringify(resumeData).substring(0, 1500) : "Not available";
 
-Here is the conversation so far:
+      const isResumeQuestion = resumeData && nextCount > 4; // Questions 6 & 7 (when nextCount is 5 and 6)
+      
+      let fullPrompt = "";
+      if (isResumeQuestion) {
+        fullPrompt = `You are a professional, friendly, and expert tech interviewer. 
+We are interviewing a candidate based on their Resume details: ${resumeMetaText}
+
+We are currently on Question ${nextCount + 1} of 7.
+This question MUST be Resume-based, focusing on:
+- Past experience and key achievements
+- Leadership and ownership
+- Impact created (e.g. key performance metrics, metrics improved)
+- Difficult problems solved or career growth
+(If the candidate lacks professional experience, use their personal projects, internships, open-source contributions, academic work, or achievements from their resume as the basis).
+
+Here is the conversation history so far:
 ${updatedHistory.map(h => `${h.role === 'user' ? 'Candidate' : 'Interviewer'}: ${h.text}`).join('\n')}
 
 Analyze the Candidate's response and formulate the next logical interview question. 
-Ask EXACTLY ONE follow-up question. 
-Keep your response short (2-3 sentences), professional, and encouraging. Focus on software engineering, architecture, code quality, and testing.`;
+Ask EXACTLY ONE follow-up question. Do not ask generic interview questions if profile-specific information is available.
+Keep your response short (2-3 sentences), professional, and encouraging.`;
+      } else {
+        fullPrompt = `You are a professional, friendly, and expert tech interviewer. 
+We are interviewing a candidate based on their Github metadata: ${githubMetaText}
+
+We are currently on Question ${nextCount + 1} of 7.
+This question MUST be GitHub-based, focusing on:
+- Project architecture
+- Technical decisions and tradeoffs
+- Challenges faced and scalability considerations
+- Technology choices
+
+Here is the conversation history so far:
+${updatedHistory.map(h => `${h.role === 'user' ? 'Candidate' : 'Interviewer'}: ${h.text}`).join('\n')}
+
+Analyze the Candidate's response and formulate the next logical interview question. 
+Ask EXACTLY ONE follow-up question. Do not ask generic interview questions if profile-specific information is available. Refer to specific repository names or files where appropriate.
+Keep your response short (2-3 sentences), professional, and encouraging.`;
+      }
 
       const response = await axios.post(`${BACKEND_URL}/chat`, {
         message: fullPrompt,
         image: snapshot || undefined
       });
 
-      const nextQuestion = response.data.text || "Thank you for that explanation. Can you elaborate on how you handled performance scaling or testing in that project?";
+      const fallbackQuestions = [
+        "Thank you for the introduction. Could you tell me more about the technical stack you chose for your main project and why you selected it?",
+        "That's very interesting. Can you elaborate on how you handled performance scaling or caching in that project?",
+        "How did you handle error tracking, state management, or debugging when building this system?",
+        "Let's shift gears slightly. Could you describe a time when you had a disagreement with a teammate or stakeholder and how you resolved it?",
+        "Could you explain your approach to testing? How do you ensure your application remains stable under heavy modifications?",
+        "What would you say was the biggest design tradeoff or technical compromise you had to make in your project's architecture?",
+        "Excellent. To conclude, do you have any questions for me, or is there anything else about your experience you'd like to highlight?"
+      ];
+      const fallbackText = fallbackQuestions[nextCount] || fallbackQuestions[1] || "";
+
+      const nextQuestion = response.data.text || fallbackText;
       const emotion = response.data.emotion || "Neutral";
       const eyeContact = response.data.eyeContact || "Focused";
       const guidance = response.data.guidance || "None";
@@ -452,12 +734,32 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
 
     } catch (err: any) {
       console.error("Error submitting answer:", err);
-      toast.error("Failed to fetch response. Check server connection.");
+      toast.error("Failed to fetch response. Using fallback question.");
       setIsAnalyzingFace(false);
-      setStatus("listening");
+      
+      const fallbackQuestions = [
+        "Thank you for the introduction. Could you tell me more about the technical stack you chose for your main project and why you selected it?",
+        "That's very interesting. Can you elaborate on how you handled performance scaling or caching in that project?",
+        "How did you handle error tracking, state management, or debugging when building this system?",
+        "Let's shift gears slightly. Could you describe a time when you had a disagreement with a teammate or stakeholder and how you resolved it?",
+        "Could you explain your approach to testing? How do you ensure your application remains stable under heavy modifications?",
+        "What would you say was the biggest design tradeoff or technical compromise you had to make in your project's architecture?",
+        "Excellent. To conclude, do you have any questions for me, or is there anything else about your experience you'd like to highlight?"
+      ];
+      const fallbackText = fallbackQuestions[nextCount] || fallbackQuestions[1] || "";
       
       // Fallback save
       await saveQuestion();
+
+      setHistory(prev => [...prev, {
+        role: "assistant",
+        text: fallbackText,
+        timestamp: new Date()
+      }]);
+
+      speakText(fallbackText, () => {
+        startListening();
+      });
     }
   };
 
@@ -846,15 +1148,447 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
     );
   }
 
+  if (status === "idle") {
+    const isArray = Array.isArray(githubData);
+    const login = isArray 
+      ? (githubData[0]?.url ? githubData[0].url.split("github.com/")[1]?.split("/")[0] : "github-user") 
+      : (githubData?.login || "github-user");
+    const name = isArray ? login : (githubData?.name || login);
+    const publicReposCount = isArray ? githubData.length : (githubData?.publicRepos || 0);
+    const repos = isArray ? githubData : (githubData?.pinnedRepos || []);
+    
+    const techSkillsSet = new Set<string>();
+    if (repos) {
+      repos.forEach((r: any) => {
+        if (r.language) techSkillsSet.add(r.language);
+      });
+    }
+    if (resumeData?.skills) {
+      resumeData.skills.forEach((s: string) => techSkillsSet.add(s));
+    }
+    const extractedTech = Array.from(techSkillsSet).slice(0, 10);
+    if (extractedTech.length === 0) {
+      extractedTech.push("React", "TypeScript", "JavaScript", "Node.js");
+    }
+
+    const profileSummary = resumeData?.summary || 
+      `Profile analyzed for candidate ${name} (${login}) with ${publicReposCount} repositories. Demonstrated experience in ${extractedTech.slice(0, 4).join(", ")}. The interview has been customized to evaluate technical depth, system design, and communication pacing.`;
+
+    return (
+      <div className="relative min-h-screen w-screen bg-[#7a7dcd] text-[#121212] flex flex-col items-center selection:bg-[#ff5a1a] selection:text-white overflow-y-auto">
+        <div className="absolute inset-0 bg-grid-pattern opacity-100 pointer-events-none z-0" />
+        <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-white/10 top-[-100px] left-[10%] pointer-events-none" />
+        <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-[#ff5a1a]/5 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
+
+        <header className="w-full max-w-5xl flex justify-between items-center px-4 md:px-6 mt-4 mb-4 z-10 relative shrink-0">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/")}
+            className="text-[#121212]/80 hover:text-[#ff5a1a] hover:bg-white/20 border border-transparent hover:border-[#121212] gap-2 rounded-xl transition-all"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Leave Interview
+          </Button>
+          
+          <div className="flex items-center gap-3">
+            <span className="font-extrabold text-lg tracking-tight text-[#121212]">
+              SkillWise<span className="text-[#ff5a1a] font-semibold">.ai</span>
+            </span>
+          </div>
+        </header>
+
+        <main className="w-full max-w-5xl flex flex-col gap-16 z-10 px-4 md:px-6 pb-24 relative">
+          
+          <section className="min-h-[calc(100vh-140px)] flex flex-col justify-center gap-6 py-6 border-b border-[#121212]/10 relative">
+            <div className="text-center md:text-left space-y-2">
+              <span className="text-[10px] text-[#ff5a1a] font-extrabold uppercase tracking-widest bg-[#ff5a1a]/10 px-3 py-1 rounded-full border border-[#ff5a1a]/20">
+                Step 01 / 03 — Profile Analysis
+              </span>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-[#121212] tracking-tight mt-2">
+                Your profile has been analyzed.
+              </h1>
+              <p className="text-sm font-semibold text-stone-700">
+                We analyzed your profile and personalized the interview criteria below.
+              </p>
+            </div>
+
+            <Card className="border-brutalist-sand rounded-2xl p-6 md:p-8 bg-[#dfdcce] w-full flex flex-col md:grid md:grid-cols-12 gap-8 shadow-xs">
+              <div className="md:col-span-4 flex flex-col items-center text-center md:items-start md:text-left space-y-4 border-b md:border-b-0 md:border-r border-[#121212]/10 pb-6 md:pb-0 md:pr-6">
+                <div className="relative animate-float">
+                  <div className="absolute -inset-1.5 rounded-full bg-[#ff5a1a]/15 blur-sm" />
+                  <img 
+                    src={`https://github.com/${login}.png`}
+                    alt={login}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                      const fallback = document.getElementById('avatar-fallback');
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                    className="h-24 w-24 rounded-full border-2 border-[#121212] object-cover relative z-10 shadow-xs"
+                  />
+                  <div 
+                    id="avatar-fallback" 
+                    className="hidden h-24 w-24 rounded-full bg-[#ff5a1a]/15 text-[#ff5a1a] border-2 border-[#121212] font-black text-2xl items-center justify-center relative z-10 shadow-xs"
+                  >
+                    {login.substring(0, 2).toUpperCase()}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <h2 className="text-xl font-extrabold text-[#121212] tracking-tight">{name}</h2>
+                  <p className="text-sm font-bold text-[#ff5a1a]">@{login}</p>
+                </div>
+
+                <div className="w-full space-y-3 pt-2 text-xs font-semibold text-stone-700">
+                  <div className="flex justify-between items-center border-b border-[#121212]/5 pb-2">
+                    <span>Public Repos:</span>
+                    <span className="font-extrabold text-[#121212] bg-[#e6e4d5] border border-[#121212]/20 px-2 py-0.5 rounded-md font-mono">{publicReposCount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Resume Status:</span>
+                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                      resumeData 
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700' 
+                        : 'bg-stone-500/10 border-stone-500/30 text-stone-600'
+                    }`}>
+                      {resumeData ? "✓ Uploaded & Analyzed" : "Not Provided"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-8 space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">AI Profile Analysis</h3>
+                  <div className="bg-[#e6e4d5] border border-[#121212]/30 p-4 rounded-xl shadow-xs">
+                    <p className="text-xs font-semibold leading-relaxed text-stone-700 italic">
+                      "{profileSummary}"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  <h3 className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">Extracted Tech Stack</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {extractedTech.map((tech, index) => (
+                      <span key={index} className="text-[10px] bg-[#ff5a1a]/10 text-[#ff5a1a] border border-[#ff5a1a]/25 px-3 py-1 rounded-full font-extrabold">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {repos && repos.length > 0 && (
+                  <div className="space-y-2.5 border-t border-[#121212]/10 pt-4">
+                    <h3 className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">Primary Engineering Projects</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {repos.slice(0, 2).map((repo: any, index: number) => (
+                        <div key={index} className="text-xs bg-[#e6e4d5] border border-[#121212]/30 p-4 rounded-xl flex flex-col justify-between min-h-[90px] gap-2 shadow-xs hover:border-[#ff5a1a] transition-all">
+                          <div>
+                            <p className="font-black text-[#ff5a1a] text-sm tracking-tight">{repo.name}</p>
+                            {repo.description && (
+                              <p className="text-[10px] text-stone-650 leading-normal line-clamp-2 mt-1 font-semibold">{repo.description}</p>
+                            )}
+                          </div>
+                          <div className="flex justify-between items-center mt-2 text-[10px] text-stone-500 font-bold border-t border-[#121212]/5 pt-2">
+                            {repo.language && <span>● {repo.language}</span>}
+                            {repo.stars !== undefined && repo.stars > 0 && <span>★ {repo.stars} stars</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-bounce text-stone-650 font-bold text-[10px] uppercase tracking-wider">
+              <span>Scroll to prepare environment</span>
+              <span className="text-sm">↓</span>
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-6 py-6 border-b border-[#121212]/10">
+            <div className="text-center md:text-left space-y-2">
+              <span className="text-[10px] text-[#ff5a1a] font-extrabold uppercase tracking-widest bg-[#ff5a1a]/10 px-3 py-1 rounded-full border border-[#ff5a1a]/20">
+                Step 02 / 03 — Environment Check
+              </span>
+              <h2 className="text-3xl font-extrabold text-[#121212] tracking-tight mt-2">
+                Interview Readiness Check
+              </h2>
+              <p className="text-sm font-semibold text-stone-700">
+                Verify your audio and visual configuration before beginning the assessment.
+              </p>
+            </div>
+
+            <Card className="border-brutalist-sand rounded-2xl p-6 md:p-8 bg-[#dfdcce] w-full grid grid-cols-1 md:grid-cols-12 gap-8 shadow-xs">
+              <div className="md:col-span-6 flex flex-col gap-4">
+                <span className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">Live Camera Feed</span>
+                
+                <div className="relative w-full aspect-video rounded-xl border-2 border-[#121212] bg-[#121212] overflow-hidden shadow-inner flex items-center justify-center">
+                  {prepCameraStatus === "ready" ? (
+                    <>
+                      <video 
+                        ref={prepVideoRef}
+                        autoPlay 
+                        playsInline 
+                        muted 
+                        className="w-full h-full object-cover scale-x-[-1]" 
+                      />
+                      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-20" />
+                      
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 font-mono text-[9px] text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        LIVE CHECK
+                      </div>
+                      
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/70 border border-white/10 font-mono text-[9px] text-white">
+                        LIGHTING: {prepLighting === 'optimal' ? 'OPTIMAL' : prepLighting === 'low-lighting' ? 'LOW' : 'CHECKING...'}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-stone-500 space-y-3">
+                      <div className="h-12 w-12 rounded-full bg-[#dfdcce] border-2 border-[#121212] flex items-center justify-center text-[#ff5a1a]">
+                        <Camera className="h-5 w-5 text-[#ff5a1a]" />
+                      </div>
+                      {prepCameraStatus === "loading" ? (
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-wider text-[#ff5a1a]">Accessing Media Devices...</p>
+                          <p className="text-[11px] text-stone-650">Please click "Allow" in your browser's prompt</p>
+                        </div>
+                      ) : prepCameraStatus === "denied" ? (
+                        <div className="space-y-1 px-4">
+                          <p className="text-xs font-bold uppercase tracking-wider text-red-500">Camera / Mic Access Denied</p>
+                          <p className="text-[11px] text-stone-650 leading-normal">Permissions were blocked. Please reset permissions in your browser bar and try again.</p>
+                          <Button 
+                            size="sm"
+                            onClick={startPrepMedia}
+                            className="bg-[#ff5a1a] hover:bg-[#e04f14] border border-[#121212] text-white rounded-lg px-3 py-1 text-[10px] mt-2 shadow-xs"
+                          >
+                            Retry Request
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1 px-4">
+                          <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Devices Inactive</p>
+                          <Button 
+                            size="sm"
+                            onClick={startPrepMedia}
+                            className="bg-[#ff5a1a] hover:bg-[#e04f14] border border-[#121212] text-white rounded-lg px-3 py-1.5 text-xs shadow-xs"
+                          >
+                            Initialize Camera & Mic
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="md:col-span-6 flex flex-col justify-between gap-6">
+                <span className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">Readiness Checklist</span>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between border-b border-[#121212]/10 pb-3">
+                    <div className="flex gap-3">
+                      <div className="p-1.5 border border-[#121212] rounded-lg bg-[#e6e4d5] shrink-0">
+                        <Camera className="h-4 w-4 text-[#ff5a1a]" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs text-[#121212]">Camera Preview</p>
+                        <p className="text-[10px] text-stone-600 font-semibold">Webcam enabled and active</p>
+                      </div>
+                    </div>
+                    <div>
+                      {prepCameraStatus === "ready" ? (
+                        <span className="text-[10px] bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold px-2 py-0.5 rounded-full">✓ Camera Ready</span>
+                      ) : (
+                        <span className="text-[10px] bg-amber-100 border border-amber-300 text-amber-800 font-bold px-2 py-0.5 rounded-full">⌛ Inactive</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 border-b border-[#121212]/10 pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex gap-3">
+                        <div className="p-1.5 border border-[#121212] rounded-lg bg-[#e6e4d5] shrink-0">
+                          <Mic className="h-4 w-4 text-[#ff5a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-extrabold text-xs text-[#121212]">Microphone Status</p>
+                          <p className="text-[10px] text-stone-600 font-semibold">Voice capture and permission check</p>
+                        </div>
+                      </div>
+                      <div>
+                        {prepMicStatus === "ready" ? (
+                          <span className="text-[10px] bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold px-2 py-0.5 rounded-full">✓ Microphone Ready</span>
+                        ) : (
+                          <span className="text-[10px] bg-amber-100 border border-amber-300 text-amber-800 font-bold px-2 py-0.5 rounded-full">⌛ Inactive</span>
+                        )}
+                      </div>
+                    </div>
+                    {prepMicStatus === "ready" && (
+                      <div className="flex items-center gap-2 mt-1 pl-10">
+                        <span className="text-[9px] font-bold text-stone-500 uppercase">Input:</span>
+                        <div className="flex-1 h-2 bg-[#e6e4d5] border border-[#121212]/20 rounded-full overflow-hidden relative">
+                          <div 
+                            className="bg-emerald-500 h-full rounded-full transition-all duration-75"
+                            style={{ width: `${prepMicLevel}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] font-mono font-bold text-stone-650 w-6 text-right">{prepMicLevel}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-start justify-between border-b border-[#121212]/10 pb-3">
+                    <div className="flex gap-3">
+                      <div className="p-1.5 border border-[#121212] rounded-lg bg-[#e6e4d5] shrink-0">
+                        <Volume2 className="h-4 w-4 text-[#ff5a1a]" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs text-[#121212]">Speakers & Audio Output</p>
+                        <p className="text-[10px] text-stone-600 font-semibold">Test tone capability</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={playSpeakerTestChime}
+                        disabled={prepAudioTestPlaying}
+                        className="rounded-lg border-[#121212] bg-[#dfdcce] hover:bg-[#cfcbae] text-[#121212] text-[10px] px-2 py-1 shadow-sm h-6"
+                      >
+                        {prepAudioTestPlaying ? "Playing..." : "Test Sound 🔊"}
+                      </Button>
+                      <span className="text-[10px] bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold px-2 py-0.5 rounded-full">✓ Ready</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start justify-between border-b border-[#121212]/10 pb-3">
+                    <div className="flex gap-3">
+                      <div className="p-1.5 border border-[#121212] rounded-lg bg-[#e6e4d5] shrink-0">
+                        <Sparkles className="h-4 w-4 text-[#ff5a1a]" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs text-[#121212]">Face Visible Check</p>
+                        <p className="text-[10px] text-stone-600 font-semibold">Verifying camera positioning</p>
+                      </div>
+                    </div>
+                    <div>
+                      {prepCameraStatus !== "ready" ? (
+                        <span className="text-[10px] bg-amber-100 border border-amber-300 text-amber-800 font-bold px-2 py-0.5 rounded-full">⌛ Waiting for Camera</span>
+                      ) : prepFaceVisible === "loading" ? (
+                        <span className="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 font-bold px-2 py-0.5 rounded-full animate-pulse">⌛ Calibrating...</span>
+                      ) : (
+                        <span className="text-[10px] bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold px-2 py-0.5 rounded-full">✓ Face Visible</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start justify-between pb-1">
+                    <div className="flex gap-3">
+                      <div className="p-1.5 border border-[#121212] rounded-lg bg-[#e6e4d5] shrink-0">
+                        <Activity className="h-4 w-4 text-[#ff5a1a]" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs text-[#121212]">Lighting and Contrast</p>
+                        <p className="text-[10px] text-stone-600 font-semibold">Checking lighting levels locally</p>
+                      </div>
+                    </div>
+                    <div>
+                      {prepCameraStatus !== "ready" ? (
+                        <span className="text-[10px] bg-amber-100 border border-amber-300 text-amber-800 font-bold px-2 py-0.5 rounded-full">⌛ Waiting for Camera</span>
+                      ) : prepLighting === "loading" ? (
+                        <span className="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 font-bold px-2 py-0.5 rounded-full animate-pulse">⌛ Measuring...</span>
+                      ) : prepLighting === "low-lighting" ? (
+                        <span className="text-[10px] bg-yellow-100 border border-yellow-300 text-yellow-800 font-bold px-2 py-0.5 rounded-full">⚠ Low Lighting</span>
+                      ) : (
+                        <span className="text-[10px] bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold px-2 py-0.5 rounded-full">✓ Lighting: Optimal</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section className="flex flex-col items-center justify-center py-6 gap-6 min-h-[450px]">
+            <div className="text-center space-y-2 max-w-xl">
+              <span className="text-[10px] text-[#ff5a1a] font-extrabold uppercase tracking-widest bg-[#ff5a1a]/10 px-3 py-1 rounded-full border border-[#ff5a1a]/20">
+                Step 03 / 03 — Begin Interview
+              </span>
+              <h2 className="text-3xl font-extrabold text-[#121212] tracking-tight mt-2">
+                Ready to begin?
+              </h2>
+              <p className="text-sm font-semibold text-stone-700 leading-relaxed">
+                This mock session simulates a live engineering interview. The final launcher details are presented below.
+              </p>
+            </div>
+
+            <Card className="border-brutalist-sand rounded-2xl p-6 md:p-8 bg-[#dfdcce] w-full max-w-xl flex flex-col items-center gap-6 shadow-xs relative overflow-hidden bg-[radial-gradient(circle_at_center,rgba(255,90,26,0.06)_0,transparent_70%)]">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-[#ff5a1a]" />
+              
+              <div className="w-full text-left space-y-4">
+                <span className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">Interview Details</span>
+                
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-stone-700">
+                  <li className="flex items-center gap-2 bg-[#e6e4d5] border border-[#121212]/10 p-2.5 rounded-lg">
+                    <span className="text-[#ff5a1a]">•</span>
+                    <span>7 Personalized Questions</span>
+                  </li>
+                  <li className="flex items-center gap-2 bg-[#e6e4d5] border border-[#121212]/10 p-2.5 rounded-lg">
+                    <span className="text-[#ff5a1a]">•</span>
+                    <span>GitHub Analysis Included</span>
+                  </li>
+                  <li className="flex items-center gap-2 bg-[#e6e4d5] border border-[#121212]/10 p-2.5 rounded-lg">
+                    <span className="text-[#ff5a1a]">•</span>
+                    <span>Resume Analysis Included</span>
+                  </li>
+                  <li className="flex items-center gap-2 bg-[#e6e4d5] border border-[#121212]/10 p-2.5 rounded-lg">
+                    <span className="text-[#ff5a1a]">•</span>
+                    <span>Communication Assessment</span>
+                  </li>
+                  <li className="flex items-center gap-2 bg-[#e6e4d5] border border-[#121212]/10 p-2.5 rounded-lg">
+                    <span className="text-[#ff5a1a]">•</span>
+                    <span>Confidence Assessment</span>
+                  </li>
+                  <li className="flex items-center gap-2 bg-[#e6e4d5] border border-[#121212]/10 p-2.5 rounded-lg">
+                    <span className="text-[#ff5a1a]">•</span>
+                    <span>Technical Evaluation</span>
+                  </li>
+                </ul>
+              </div>
+
+              {!speechSupported && (
+                <div className="flex items-center gap-2 bg-red-950/20 border border-red-500/30 p-4 rounded-xl text-red-200 text-xs text-left w-full">
+                  <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                  <p>Web Speech API is not supported in this browser. You can still participate in the interview by typing your answers using the text override block.</p>
+                </div>
+              )}
+
+              <Button 
+                size="lg" 
+                onClick={startInterview}
+                className="w-full sm:w-auto bg-[#ff5a1a] hover:bg-[#e04f14] border-2 border-[#121212] text-white shadow-md rounded-2xl px-12 py-7 text-lg font-black flex items-center justify-center gap-3 hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer mt-2"
+              >
+                <Play className="h-5 w-5 fill-current" />
+                Start Voice Interview
+              </Button>
+            </Card>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-screen max-h-screen w-screen bg-[#7a7dcd] text-[#121212] flex flex-col items-center p-4 md:p-6 selection:bg-[#ff5a1a] selection:text-white overflow-hidden">
-      {/* Background Grids & Orbs */}
       <div className="absolute inset-0 bg-grid-pattern opacity-100 pointer-events-none z-0" />
       <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-white/10 top-[-100px] left-[10%] pointer-events-none" />
       <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-[#ff5a1a]/5 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
 
-      {/* Header */}
-      <header className="w-full max-w-5xl flex justify-between items-center mb-4 z-10 relative shrink-0">
+      <header className="w-full max-w-5xl flex justify-between items-center mt-2 mb-6 z-10 relative shrink-0">
         <Button 
           variant="ghost" 
           onClick={() => navigate("/")}
@@ -865,7 +1599,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
         </Button>
         
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-[#dfdcce] border border-[#121212] px-3 py-1.5 rounded-full text-xs font-bold text-[#121212] shadow-xs">
+          <div className="flex items-center gap-1.5 bg-[#dfdcce] border border-[#121212] px-4 py-2 rounded-full text-xs font-bold text-[#121212] shadow-xs">
             <span className={`h-2.5 w-2.5 rounded-full ${status === 'listening' ? 'bg-red-500 animate-pulse' : 'bg-[#ff5a1a]'}`} />
             Status: {status.toUpperCase()}
           </div>
@@ -874,469 +1608,314 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
             variant="outline" 
             size="icon" 
             onClick={toggleMute}
-            className="rounded-xl border-[#121212] bg-[#dfdcce] hover:bg-[#cfcbae] text-[#121212] shadow-xs"
+            className="rounded-xl border-[#121212] bg-[#dfdcce] hover:bg-[#cfcbae] text-[#121212] shadow-xs h-9 w-9"
           >
             {isMuted ? <VolumeX className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4 text-emerald-600" />}
           </Button>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 gap-4 z-10 flex-1 min-h-0 relative">
-        
-        {/* Left Panel: GitHub Info & Interactive State */}
-        <section className="lg:col-span-2 flex flex-col gap-4 h-full min-h-0">
-          
-          {/* GitHub Metadata Card */}
-          <Card className="border-brutalist-sand rounded-2xl shadow-xs flex-initial flex flex-col">
-            <CardHeader className="border-b border-[#121212]/10">
-              <CardTitle className="text-lg font-extrabold text-[#121212] flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#ff5a1a]" />
-                Candidate Profile
-              </CardTitle>
-              <CardDescription className="text-stone-600">Customized interview criteria</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 flex-1 flex flex-col min-h-0 overflow-y-auto justify-between gap-3">
-              {githubData ? (
-                <div className="space-y-4 font-semibold text-stone-700">
-                  <div className="flex items-center gap-3">
-                    {githubData.avatarUrl ? (
-                      <img src={githubData.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full border border-[#121212] object-cover" />
-                    ) : (
-                      <div className="h-12 w-12 rounded-full bg-[#ff5a1a]/10 flex items-center justify-center border border-[#121212] text-[#ff5a1a] font-bold">
-                        {githubData.login ? githubData.login.substring(0,2).toUpperCase() : "GH"}
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-extrabold text-[#121212]">{githubData.name || githubData.login || "Developer"}</h3>
-                      <p className="text-xs text-[#121212]/60">@{githubData.login || "github"}</p>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-[#121212]/10 pt-4 space-y-2.5">
-                    {githubData.bio && (
-                      <p className="text-xs text-stone-600 italic">"{githubData.bio}"</p>
-                    )}
-                    {githubData.publicRepos !== undefined && (
-                      <div className="flex justify-between text-xs font-bold text-stone-700">
-                        <span>Public Repos:</span>
-                        <span className="font-extrabold text-[#121212]">{githubData.publicRepos}</span>
-                      </div>
-                    )}
-                    {githubData.followers !== undefined && (
-                      <div className="flex justify-between text-xs font-bold text-stone-700">
-                        <span>Followers:</span>
-                        <span className="font-extrabold text-[#121212]">{githubData.followers}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {githubData.pinnedRepos && githubData.pinnedRepos.length > 0 && (
-                    <div className="border-t border-[#121212]/10 pt-4">
-                      <p className="text-xs font-bold text-stone-850 mb-2">Top Repositories:</p>
-                      <div className="space-y-2">
-                        {githubData.pinnedRepos.slice(0, 3).map((repo: any, index: number) => (
-                          <div key={index} className="text-xs bg-[#e6e4d5] border border-[#121212]/30 p-2.5 rounded-lg">
-                            <p className="font-bold text-[#ff5a1a]">{repo.name}</p>
-                            {repo.language && <p className="text-[10px] text-stone-500 mt-1">● {repo.language}</p>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col justify-center items-center text-slate-500 text-sm">
-                  <AlertCircle className="h-8 w-8 mb-2 text-slate-400" />
-                  No profile metadata loaded.
-                </div>
-              )}
-              {/* Status wave at bottom of left panel */}
-              {status !== "idle" && status !== "completed" && (
-                <div className="mt-4 border-t border-[#121212]/10 pt-4 flex flex-col items-center shrink-0">
-                  <p className="text-xs text-[#121212]/60 font-extrabold mb-2 uppercase tracking-wider">Sound Wave</p>
-                  <div className="flex items-center gap-1.5 h-10">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((bar) => {
-                      let animClass = "";
-                      if (status === "listening") animClass = "animate-pulse bg-red-500";
-                      else if (status === "speaking") animClass = "animate-pulse bg-emerald-500";
-                      else if (status === "processing") animClass = "animate-pulse bg-[#ff5a1a]";
-                      
-                      // Alternate heights for visual variety
-                      const height = bar % 3 === 0 ? "h-8" : bar % 2 === 0 ? "h-6" : "h-4";
-                      const delay = `animation-delay-${bar * 150}`;
-                      return (
-                        <span 
-                          key={bar} 
-                          className={`w-1 rounded-full bg-[#121212]/10 transition-all ${height} ${animClass} ${delay}`} 
-                          style={{
-                            animationDuration: status === "listening" ? "0.6s" : "1.2s",
-                            animationDelay: `${bar * 0.1}s`
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-             </CardContent>
-           </Card>
-
-           {/* Live Video & AI Expression HUD Card */}
-           <Card className="border-brutalist-sand rounded-2xl shadow-xs flex-1 min-h-0 flex flex-col bg-[#dfdcce] overflow-hidden">
-             <CardHeader className="border-b border-[#121212]/10 py-4">
-               <CardTitle className="text-base font-extrabold text-[#121212] flex items-center justify-between">
-                 <div className="flex items-center gap-2">
-                   <Activity className="h-4 w-4 text-[#ff5a1a]" />
-                   AI Face Assessment Feed
-                 </div>
-                 {isCameraOn && (
-                   <span className="flex h-2 w-2 relative">
-                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-450 opacity-75"></span>
-                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                   </span>
-                 )}
-               </CardTitle>
-               <CardDescription className="text-stone-600 text-xs">Real-time facial expression tracking</CardDescription>
-             </CardHeader>
-             <CardContent className="p-4 flex-1 flex flex-col min-h-0 overflow-y-auto items-center gap-3">
-               {/* Webcam container */}
-               <div className="relative w-full aspect-[4/3] rounded-xl border-2 border-[#121212] bg-[#121212] overflow-hidden shadow-inner group">
-                 {isCameraOn ? (
-                   <>
-                     <video 
-                       ref={videoRef}
-                       autoPlay 
-                       playsInline 
-                       muted 
-                       className="w-full h-full object-cover scale-x-[-1]" 
-                     />
-                     {/* Retro CRT overlay / HUD lines */}
-                     <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-20" />
-                     
-                     {/* HUD Overlays */}
-                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 font-mono text-[9px] text-emerald-450 flex items-center gap-1.5 uppercase tracking-wider">
-                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-450 animate-pulse" />
-                       REC [AI ACTIVE]
-                     </div>
-
-                     <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 font-mono text-[9px] text-[#ff5a1a]">
-                       FPS: 30
-                     </div>
-
-                     <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/10 font-mono text-[10px] text-white space-y-1">
-                       <div className="flex justify-between">
-                        <span>EYE CONTACT:</span>
-                        <span className="text-emerald-400 font-extrabold">{eyeContactIndex}% ({stanceState})</span>
-                       </div>
-                       <div className="flex justify-between">
-                        <span>EMOTION CUE:</span>
-                        <span className="text-[#ff5a1a] font-extrabold">{isAnalyzingFace ? "ANALYZING..." : detectedEmotion.toUpperCase()}</span>
-                       </div>
-                     </div>
-                   </>
-                 ) : (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-stone-400 space-y-3">
-                     <div className="h-12 w-12 rounded-full bg-stone-900/50 border border-stone-800 flex items-center justify-center text-stone-500">
-                       <Camera className="h-6 w-6" />
-                     </div>
-                     <div>
-                       <p className="text-xs font-bold text-[#121212]/70">Camera is disabled</p>
-                       <p className="text-[10px] text-stone-500 max-w-xs mt-1">Enable camera to allow AI-guided coaching based on your expressions.</p>
-                     </div>
-                   </div>
-                 )}
+      <main className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 flex-1 min-h-0 relative">
+        <section className="lg:col-span-5 flex flex-col gap-6 h-full min-h-0">
+          <Card className="border-brutalist-sand rounded-2xl shadow-xs flex-1 min-h-0 flex flex-col bg-[#dfdcce] overflow-hidden">
+           <CardHeader className="border-b border-[#121212]/10 p-5 pb-3">
+             <CardTitle className="text-base font-extrabold text-[#121212] flex items-center justify-between">
+               <div className="flex items-center gap-2">
+                 <Activity className="h-4 w-4 text-[#ff5a1a]" />
+                 AI Face Assessment Feed
                </div>
-
-               {/* Toggle Button */}
-               <div className="w-full flex justify-between items-center gap-2 border-t border-[#121212]/10 pt-3">
-                 <span className="text-[11px] font-extrabold text-[#121212]/60 uppercase tracking-wider">Vibe Coaching</span>
-                 <Button
-                   size="sm"
-                   onClick={toggleCamera}
-                   className={`rounded-xl border border-[#121212] px-4 py-1 text-xs font-bold gap-1.5 shadow-sm transition-all ${
-                     isCameraOn 
-                       ? "bg-red-500 hover:bg-red-600 text-white" 
-                       : "bg-[#ff5a1a] hover:bg-[#e04f14] text-white"
-                   }`}
-                 >
-                   {isCameraOn ? (
-                     <>
-                       <CameraOff className="h-3.5 w-3.5" />
-                       Disable Camera
-                     </>
-                   ) : (
-                     <>
-                       <Camera className="h-3.5 w-3.5" />
-                       Enable Camera
-                     </>
-                   )}
-                 </Button>
-               </div>
-
-               {/* Guidance Display */}
-               {isCameraOn && (visualGuidance || isAnalyzingFace) && (
-                 <div className="w-full bg-[#e6e4d5] border border-[#121212] rounded-xl p-3 font-mono text-[10px] space-y-1.5">
-                   <div className="flex items-center gap-1.5 border-b border-[#121212]/10 pb-1.5">
-                     <Sparkles className="h-3.5 w-3.5 text-[#ff5a1a] animate-pulse" />
-                     <span className="font-extrabold text-[#121212]">AI VIBE FEEDBACK</span>
-                   </div>
-                   {isAnalyzingFace ? (
-                     <div className="flex items-center gap-2 text-[#ff5a1a] animate-pulse">
-                       <Loader2 className="h-3 w-3 animate-spin" />
-                       <span>Processing facial expressions...</span>
-                     </div>
-                   ) : (
-                     <div className="space-y-1">
-                       <div className="flex justify-between text-stone-650">
-                         <span>DETECTION:</span>
-                         <span className="font-bold text-[#121212]">{detectedEmotion}</span>
-                       </div>
-                       <div className="flex justify-between text-stone-650">
-                         <span>CONTACT:</span>
-                         <span className="font-bold text-[#121212]">{eyeContactQuality}</span>
-                       </div>
-                       <div className="text-stone-700 leading-relaxed mt-1 font-semibold border-t border-[#121212]/5 pt-1 italic">
-                         "{visualGuidance}"
-                       </div>
-                     </div>
-                   )}
-                 </div>
+               {isCameraOn && (
+                 <span className="flex h-2 w-2 relative">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-450 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                 </span>
                )}
-             </CardContent>
-           </Card>
-          </section>
+             </CardTitle>
+             <CardDescription className="text-stone-600 text-xs">Real-time facial expression tracking</CardDescription>
+           </CardHeader>
+           <CardContent className="p-3 pb-2 flex-1 flex flex-col min-h-0 overflow-hidden gap-3">
+             <div className="relative w-full flex-1 min-h-0 rounded-xl border-2 border-[#121212] bg-[#121212] overflow-hidden shadow-inner group">
+               {isCameraOn ? (
+                 <>
+                   <video 
+                     ref={videoRef}
+                     autoPlay 
+                     playsInline 
+                     muted 
+                     className="w-full h-full object-cover scale-x-[-1]" 
+                   />
+                   <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-20" />
+                   
+                   <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 font-mono text-[9px] text-emerald-450 flex items-center gap-1.5 uppercase tracking-wider">
+                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-450 animate-pulse" />
+                     REC [AI ACTIVE]
+                   </div>
 
-        {/* Right Panel: Voice Interface Orb & Chat Log */}
-        <section className="lg:col-span-3 flex flex-col h-full min-h-0">
-          <Card className="border-brutalist-sand rounded-2xl flex-1 flex flex-col overflow-hidden shadow-xs">
-            
-            {status === "idle" && (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[radial-gradient(circle_at_center,rgba(255,90,26,0.06)_0,transparent_70%)]">
-                <div className="relative mb-6">
-                  {/* Glowing rings */}
-                  <div className="absolute -inset-4 rounded-full bg-[#ff5a1a]/10 animate-ping pointer-events-none" />
-                  <div className="absolute -inset-1 rounded-full bg-[#ff5a1a]/20 blur-sm pointer-events-none" />
-                  <div className="h-24 w-24 bg-gradient-to-tr from-[#ff5a1a] to-[#ff781f] rounded-full flex items-center justify-center text-white border-2 border-[#121212] shadow-xs relative">
-                    <Sparkles className="h-10 w-10 text-white animate-pulse" />
-                  </div>
-                </div>
-                
-                <h2 className="text-2xl font-extrabold text-[#121212] tracking-tight mb-2">Are you ready to begin?</h2>
-                <p className="text-stone-700 text-sm max-w-md mb-8 font-semibold">
-                  This mock session simulates a live engineering interview. Make sure your microphone is enabled, you are in a quiet room, and your sound is on.
-                </p>
+                   <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 font-mono text-[9px] text-[#ff5a1a]">
+                     FPS: 30
+                   </div>
 
-                {!speechSupported && (
-                  <div className="flex items-center gap-2 bg-red-950/20 border border-red-500/30 p-4 rounded-xl text-red-200 text-xs text-left max-w-md mb-6">
-                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
-                    <p>Web Speech API is not supported in this browser. You can still participate in the interview by typing your answers using the text override block below.</p>
+                   <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/10 font-mono text-[10px] text-white space-y-1">
+                     <div className="flex justify-between">
+                      <span>EYE CONTACT:</span>
+                      <span className="text-emerald-400 font-extrabold">{eyeContactIndex}% ({stanceState})</span>
+                     </div>
+                     <div className="flex justify-between">
+                      <span>EMOTION CUE:</span>
+                      <span className="text-[#ff5a1a] font-extrabold">{isAnalyzingFace ? "ANALYZING..." : detectedEmotion.toUpperCase()}</span>
+                     </div>
+                   </div>
+                 </>
+               ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-stone-450 space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-[#dfdcce] border-2 border-[#121212] flex items-center justify-center text-[#ff5a1a] shadow-xs">
+                      <Camera className="h-7 w-7 text-[#ff5a1a]" />
+                    </div>
+                    <div className="space-y-1.5 px-4">
+                      <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Camera is disabled</p>
+                      <p className="text-sm font-extrabold text-[#121212] leading-relaxed max-w-xs">
+                        Enable camera for real-time interview coaching and confidence analysis
+                      </p>
+                    </div>
                   </div>
                 )}
+             </div>
 
-                <Button 
-                  size="lg" 
-                  onClick={startInterview}
-                  className="bg-[#ff5a1a] hover:bg-[#e04f14] border border-[#121212] text-white shadow-xs rounded-xl px-8 py-6 text-base font-extrabold flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  <Play className="h-5 w-5 fill-current" />
-                  Start Voice Interview
-                </Button>
-              </div>
-            )}
+             <div className="w-full flex justify-between items-center gap-2 border-t border-[#121212]/10 pt-3">
+               <span className="text-[11px] font-extrabold text-[#121212]/60 uppercase tracking-wider">Vibe Coaching</span>
+               <Button
+                 size="sm"
+                 onClick={toggleCamera}
+                 className={`rounded-xl border border-[#121212] px-4 py-1 text-xs font-bold gap-1.5 shadow-sm transition-all ${
+                   isCameraOn 
+                     ? "bg-red-500 hover:bg-red-600 text-white" 
+                     : "bg-[#ff5a1a] hover:bg-[#e04f14] text-white"
+                 }`}
+               >
+                 {isCameraOn ? (
+                   <>
+                     <CameraOff className="h-3.5 w-3.5" />
+                     Disable Camera
+                   </>
+                 ) : (
+                   <>
+                     <Camera className="h-3.5 w-3.5" />
+                     Enable Camera
+                   </>
+                 )}
+               </Button>
+             </div>
 
-            {status !== "idle" && (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Scrolling Chat history */}
-                <div className="flex-1 p-6 overflow-y-auto min-h-0 space-y-4 bg-white/40 border-b border-[#121212]/15">
-                  {history.map((msg, index) => (
-                    <div 
-                      key={index}
-                      className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
-                    >
-                      <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border ${
-                        msg.role === 'user' 
-                          ? 'bg-[#dfdcce] border-[#121212] text-[#ff5a1a]' 
-                          : 'bg-[#ff5a1a]/10 border border-[#ff5a1a]/20 text-[#ff5a1a]'
-                      }`}>
-                        {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                      </div>
-                      <div className={`p-4 rounded-2xl text-sm shadow-sm font-semibold border ${
-                        msg.role === 'user'
-                          ? 'bg-[#ff5a1a] text-white border-[#121212] rounded-tr-none'
-                          : 'bg-[#dfdcce] border-[#121212] text-[#121212] rounded-tl-none'
-                      }`}>
-                        <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Local visualizer for active voice input */}
-                  {status === "listening" && transcript && (
-                    <div className="flex gap-3 max-w-[85%] ml-auto flex-row-reverse animate-fade-in">
-                      <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-red-950/20 border border-red-500/30 text-red-400">
-                        <Mic className="h-4 w-4 animate-pulse" />
-                      </div>
-                      <div className="p-4 rounded-2xl text-sm bg-red-950/10 border border-red-500/20 text-red-700 rounded-tr-none italic font-bold">
-                        {transcript}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Processing animation */}
-                  {status === "processing" && (
-                    <div className="flex gap-3 max-w-[80%] mr-auto items-center">
-                      <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-[#ff5a1a]/10 border border-[#ff5a1a]/20 text-[#ff5a1a]">
-                        <Bot className="h-4 w-4" />
-                      </div>
-                      <div className="flex items-center gap-2 px-4 py-3 bg-[#dfdcce] border border-[#121212] rounded-2xl rounded-tl-none shadow-xs">
-                        <Loader2 className="h-4 w-4 animate-spin text-[#ff5a1a]" />
-                        <span className="text-xs text-stone-600 font-bold">Interviewer is thinking...</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Microphone / controls center */}
-                <div className="bg-[#e6e4d5] border-t border-[#121212] p-6 flex flex-col items-center justify-center gap-4">
-                  {errorText && (
-                    <div className="w-full flex items-center gap-2 text-red-200 bg-red-950/20 border border-red-500/30 px-3 py-2 rounded-xl text-xs font-bold">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      <p>{errorText}</p>
-                    </div>
-                  )}
-
-                  {status !== "completed" ? (
-                    <div className="flex flex-col items-center gap-4 w-full">
-                      {/* Big Orb Controls */}
-                      <div className="flex items-center gap-6">
-                        
-                        {/* Cancel / Stop Synthesis */}
-                        {status === "speaking" && (
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => {
-                              if (speechSynthesis) speechSynthesis.cancel();
-                              setStatus("listening");
-                              startListening();
-                            }}
-                            className="rounded-full h-11 w-11 border-[#121212] bg-[#dfdcce] text-stone-750 hover:bg-[#cfcbae] shadow-xs"
-                            title="Skip Speaking & Start Answering"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-
-                        {/* Microphone Main Button */}
-                        <div className="relative">
-                          {/* Pulser rings */}
-                          {status === "listening" && (
-                            <>
-                              <div className="absolute -inset-3 rounded-full bg-red-500/15 animate-ping" />
-                              <div className="absolute -inset-1.5 rounded-full bg-red-500/25 blur-xs" />
-                            </>
-                          )}
-                          {status === "speaking" && (
-                            <>
-                              <div className="absolute -inset-3 rounded-full bg-emerald-500/15 animate-pulse" />
-                            </>
-                          )}
-
-                          <Button
-                            size="icon"
-                            onClick={status === "listening" ? () => submitAnswer() : startListening}
-                            disabled={status === "processing"}
-                            className={`rounded-full h-16 w-16 shadow-lg border border-[#121212] text-white transition-all scale-[1.05] hover:scale-[1.1] active:scale-[0.95] ${
-                              status === "listening"
-                                ? "bg-red-500 hover:bg-red-600"
-                                : status === "speaking"
-                                ? "bg-emerald-500 hover:bg-emerald-600"
-                                : "bg-[#ff5a1a] hover:bg-[#e04f14]"
-                            }`}
-                          >
-                            {status === "listening" ? (
-                              <Send className="h-6 w-6 animate-pulse" />
-                            ) : status === "processing" ? (
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            ) : (
-                              <Mic className="h-6 w-6" />
-                            )}
-                          </Button>
-                        </div>
-
-                        {/* Finish Interview Button */}
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={finishInterview}
-                          className="rounded-full h-11 w-11 border-[#121212] bg-[#dfdcce] text-red-500 hover:bg-red-50 shadow-xs"
-                          title="Finish & Save Interview"
-                        >
-                          <Square className="h-4 w-4 fill-current text-red-500" />
-                        </Button>
-                      </div>
-
-                      {/* Informational Subtitle */}
-                      <p className="text-xs text-stone-600 font-bold">
-                        {status === "listening" 
-                          ? transcript 
-                            ? "Press the button or stop talking to submit your answer" 
-                            : "Listening to your voice... Speak now"
-                          : status === "speaking" 
-                          ? "Speaking current question..." 
-                          : status === "processing" 
-                          ? "Synthesizing answer..."
-                          : "Press Microphone to start talking"}
-                      </p>
-
-                      {/* Text Entry Fallback Override */}
-                      <div className="w-full flex gap-2 border-t border-[#121212]/15 pt-4 mt-2">
-                        <input
-                          type="text"
-                          value={manualInput}
-                          onChange={(e) => setManualInput(e.target.value)}
-                          placeholder="Or type your response here instead..."
-                          className="flex-1 bg-white border border-[#121212] rounded-xl px-4 py-2 text-xs text-[#121212] placeholder-stone-405 focus:outline-none focus:border-[#ff5a1a] focus:ring-1 focus:ring-[#ff5a1a]/30 font-semibold"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              submitAnswer(manualInput);
-                            }
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => submitAnswer(manualInput)}
-                          className="bg-[#ff5a1a] hover:bg-[#e04f14] border border-[#121212] text-white rounded-xl text-xs gap-1.5 shadow-sm"
-                        >
-                          <Send className="h-3 w-3" />
-                          Send
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    // Completed View
-                    <div className="text-center py-4 flex flex-col items-center">
-                      <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-2" />
-                      <h3 className="font-extrabold text-[#121212] text-lg">Interview Completed!</h3>
-                      <p className="text-xs text-stone-700 mt-1 max-w-sm mb-4 font-semibold">Your answers have been stored and processed successfully.</p>
-                      <Button 
-                        onClick={() => navigate("/")}
-                        className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[#dfdcce] border border-[#121212] hover:bg-[#cfcbae] text-[#121212] transition-all shadow-xs"
-                      >
-                        Return Home
-                      </Button>
-                    </div>
-                  )}
-
-                </div>
-              </div>
-            )}
+             {isCameraOn && (visualGuidance || isAnalyzingFace) && (
+               <div className="w-full bg-[#e6e4d5] border border-[#121212] rounded-xl p-3 font-mono text-[10px] space-y-1.5">
+                 <div className="flex items-center gap-1.5 border-b border-[#121212]/10 pb-1.5">
+                   <Sparkles className="h-3.5 w-3.5 text-[#ff5a1a] animate-pulse" />
+                   <span className="font-extrabold text-[#121212]">AI VIBE FEEDBACK</span>
+                 </div>
+                 {isAnalyzingFace ? (
+                   <div className="flex items-center gap-2 text-[#ff5a1a] animate-pulse">
+                     <Loader2 className="h-3 w-3 animate-spin" />
+                     <span>Processing facial expressions...</span>
+                   </div>
+                 ) : (
+                   <div className="space-y-1">
+                     <div className="flex justify-between text-stone-650">
+                       <span>DETECTION:</span>
+                       <span className="font-bold text-[#121212]">{detectedEmotion}</span>
+                     </div>
+                     <div className="flex justify-between text-stone-650">
+                       <span>CONTACT:</span>
+                       <span className="font-bold text-[#121212]">{eyeContactQuality}</span>
+                     </div>
+                     <div className="text-stone-700 leading-relaxed mt-1 font-semibold border-t border-[#121212]/5 pt-1 italic">
+                       "{visualGuidance}"
+                     </div>
+                   </div>
+                 )}
+               </div>
+             )}
+           </CardContent>
           </Card>
         </section>
 
+        <section className="lg:col-span-7 flex flex-col h-full min-h-0">
+          <Card className="border-brutalist-sand rounded-2xl flex-1 flex flex-col overflow-hidden shadow-xs">
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 p-6 overflow-y-auto min-h-0 space-y-4 bg-white/40 border-b border-[#121212]/15">
+                {history.map((msg, index) => (
+                  <div 
+                    key={index}
+                    className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
+                  >
+                    <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border ${
+                      msg.role === 'user' 
+                        ? 'bg-[#dfdcce] border-[#121212] text-[#ff5a1a]' 
+                        : 'bg-[#ff5a1a]/10 border border-[#ff5a1a]/20 text-[#ff5a1a]'
+                    }`}>
+                      {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                    </div>
+                    <div className={`p-4 rounded-2xl text-sm shadow-sm font-semibold border ${
+                      msg.role === 'user'
+                        ? 'bg-[#ff5a1a] text-white border-[#121212] rounded-tr-none'
+                        : 'bg-[#dfdcce] border-[#121212] text-[#121212] rounded-tl-none'
+                    }`}>
+                      <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    </div>
+                  </div>
+                ))}
+                
+                {status === "listening" && transcript && (
+                  <div className="flex gap-3 max-w-[85%] ml-auto flex-row-reverse animate-fade-in">
+                    <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-red-950/20 border border-red-500/30 text-red-400">
+                      <Mic className="h-4 w-4 animate-pulse" />
+                    </div>
+                    <div className="p-4 rounded-2xl text-sm bg-red-950/10 border border-red-500/20 text-red-700 rounded-tr-none italic font-bold">
+                      {transcript}
+                    </div>
+                  </div>
+                )}
+
+                {status === "processing" && (
+                  <div className="flex gap-3 max-w-[80%] mr-auto items-center">
+                    <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-[#ff5a1a]/10 border border-[#ff5a1a]/20 text-[#ff5a1a]">
+                      <Bot className="h-4 w-4" />
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-3 bg-[#dfdcce] border border-[#121212] rounded-2xl rounded-tl-none shadow-xs">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#ff5a1a]" />
+                      <span className="text-xs text-stone-600 font-bold">Interviewer is thinking...</span>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={chatEndRef} />
+              </div>
+
+              <div className="bg-[#e6e4d5] border-t border-[#121212] p-6 flex flex-col items-center justify-center gap-4">
+                {errorText && (
+                  <div className="w-full flex items-center gap-2 text-red-200 bg-red-950/20 border border-red-500/30 px-3 py-2 rounded-xl text-xs font-bold">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <p>{errorText}</p>
+                  </div>
+                )}
+
+                {status !== "completed" ? (
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div className="flex items-center gap-6">
+                      
+                      {status === "speaking" && (
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => {
+                            if (speechSynthesis) speechSynthesis.cancel();
+                            setStatus("listening");
+                            startListening();
+                          }}
+                          className="rounded-full h-11 w-11 border-[#121212] bg-[#dfdcce] text-stone-750 hover:bg-[#cfcbae] shadow-xs"
+                          title="Skip Speaking & Start Answering"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      )}
+
+                      <div className="relative">
+                        {status === "listening" && (
+                          <>
+                            <div className="absolute -inset-3 rounded-full bg-red-500/15 animate-ping" />
+                            <div className="absolute -inset-1.5 rounded-full bg-red-500/25 blur-xs" />
+                          </>
+                        )}
+                        {status === "speaking" && (
+                          <>
+                            <div className="absolute -inset-3 rounded-full bg-emerald-500/15 animate-pulse" />
+                          </>
+                        )}
+
+                        <Button
+                          size="icon"
+                          onClick={status === "listening" ? () => submitAnswer() : startListening}
+                          disabled={status === "processing"}
+                          className={`rounded-full h-16 w-16 shadow-lg border border-[#121212] text-white transition-all scale-[1.05] hover:scale-[1.1] active:scale-[0.95] ${
+                            status === "listening"
+                              ? "bg-red-500 hover:bg-red-600"
+                              : status === "speaking"
+                              ? "bg-emerald-500 hover:bg-emerald-600"
+                              : "bg-[#ff5a1a] hover:bg-[#e04f14]"
+                          }`}
+                        >
+                          {status === "listening" ? (
+                            <Send className="h-6 w-6 animate-pulse" />
+                          ) : status === "processing" ? (
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                          ) : (
+                            <Mic className="h-6 w-6" />
+                          )}
+                        </Button>
+                      </div>
+
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={finishInterview}
+                        className="rounded-full h-11 w-11 border-[#121212] bg-[#dfdcce] text-red-500 hover:bg-red-50 shadow-xs"
+                        title="Finish & Save Interview"
+                      >
+                        <Square className="h-4 w-4 fill-current text-red-500" />
+                      </Button>
+                    </div>
+
+                    <p className="text-xs text-stone-600 font-bold">
+                      {status === "listening" 
+                        ? transcript 
+                          ? "Press the button or stop talking to submit your answer" 
+                          : "Listening to your voice... Speak now"
+                        : status === "speaking" 
+                        ? "Speaking current question..." 
+                        : status === "processing" 
+                        ? "Synthesizing answer..."
+                        : "Press Microphone to start talking"}
+                    </p>
+
+                    <div className="w-full flex gap-2 border-t border-[#121212]/15 pt-4 mt-2">
+                      <input
+                        type="text"
+                        value={manualInput}
+                        onChange={(e) => setManualInput(e.target.value)}
+                        placeholder="Or type your response here instead..."
+                        className="flex-1 bg-white border border-[#121212] rounded-xl px-4 py-2 text-xs text-[#121212] placeholder-stone-450 focus:outline-none focus:border-[#ff5a1a] focus:ring-1 focus:ring-[#ff5a1a]/30 font-semibold"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            submitAnswer(manualInput);
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => submitAnswer(manualInput)}
+                        className="bg-[#ff5a1a] hover:bg-[#e04f14] border border-[#121212] text-white rounded-xl text-xs gap-1.5 shadow-sm"
+                      >
+                        <Send className="h-3 w-3" />
+                        Send
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 flex flex-col items-center">
+                    <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-2" />
+                    <h3 className="font-extrabold text-[#121212] text-lg">Interview Completed!</h3>
+                    <p className="text-xs text-stone-750 mt-1 max-w-sm mb-4 font-semibold">Your answers have been stored and processed successfully.</p>
+                    <Button 
+                      onClick={() => navigate("/")}
+                      className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[#dfdcce] border border-[#121212] hover:bg-[#cfcbae] text-[#121212] transition-all shadow-xs"
+                    >
+                      Return Home
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        </section>
       </main>
     </div>
   );

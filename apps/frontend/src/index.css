@@ -81,6 +81,22 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Elegant custom scrollbar for dashboard panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(18, 18, 18, 0.15);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ff5a1a;
+}
+
+
 
 
 

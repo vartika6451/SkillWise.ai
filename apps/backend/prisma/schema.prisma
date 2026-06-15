@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -30,6 +29,7 @@ model Interview {
   title          String?
   description    String?
   githubMetaData String?
+  resumeMetaData String?
 
   status      InterviewStatus @default(PENDING)
 

@@ -32,6 +32,8 @@ export function Form() {
   const [github, setGithub] = useState("");
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState("");
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeBase64, setResumeBase64] = useState<string>("");
   const navigate = useNavigate();
 
   // Validate GitHub URL format
@@ -52,6 +54,32 @@ export function Form() {
       setValidationError("");
     }
   }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size exceeds 5MB limit.");
+      return;
+    }
+
+    if (file.type !== "application/pdf" && file.type !== "text/plain") {
+      toast.error("Only PDF or TXT files are supported.");
+      return;
+    }
+
+    setResumeFile(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setResumeBase64(reader.result as string);
+      toast.success(`Successfully loaded resume: ${file.name}`);
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file.");
+    };
+    reader.readAsDataURL(file);
+  };
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -77,11 +105,16 @@ export function Form() {
 
     try {
       const response = await axios.post(`${BACKEND_URL}/api/v1/pre-interview`, {
-        github: username
+        github: username,
+        resume: resumeBase64 ? {
+          base64: resumeBase64,
+          fileName: resumeFile?.name || "resume.pdf",
+          fileType: resumeFile?.type || "application/pdf"
+        } : undefined
       });
       const interviewId = response.data.id;
       if (interviewId) {
-        toast.success("Successfully fetched GitHub profile! Launching interview...", {
+        toast.success("Successfully processed profile & resume! Launching interview...", {
           description: `Loaded profile for ${username}`
         });
         // Short delay to build excitement
@@ -195,6 +228,35 @@ export function Form() {
                     ● {validationError}
                   </p>
                 )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-extrabold text-[#121212] block">
+                    Upload Resume (PDF or TXT, optional)
+                  </label>
+                  <div className="relative border-2 border-dashed border-[#121212]/30 hover:border-[#ff5a1a] rounded-xl p-4 bg-[#e6e4d5] hover:bg-[#dfdcce] transition-all flex flex-col items-center justify-center cursor-pointer group">
+                    <input 
+                      type="file" 
+                      accept=".pdf,.txt" 
+                      onChange={handleFileChange}
+                      disabled={loading}
+                      className="absolute inset-0 opacity-0 cursor-pointer disabled:pointer-events-none"
+                    />
+                    <FileText className="h-6 w-6 text-[#ff5a1a] mb-2 group-hover:scale-110 transition-transform" />
+                    {resumeFile ? (
+                      <div className="text-center">
+                        <p className="text-xs font-bold text-[#121212]">{resumeFile.name}</p>
+                        <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
+                          {(resumeFile.size / 1024).toFixed(1)} KB • Click to change
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <p className="text-xs font-bold text-stone-600">Drag & drop or click to upload</p>
+                        <p className="text-[10px] text-stone-500 font-semibold mt-0.5">PDF or TXT up to 5MB</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <button
                   type="submit"

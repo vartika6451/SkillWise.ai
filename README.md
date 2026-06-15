@@ -23,8 +23,7 @@ SkillWise.ai is a premium, real-time, sandbox-driven AI Technical Interviewer th
   * Animates a cybernetic real-time HUD showing eye-contact consistency, stress levels, and attentiveness.
   * Captures frame snapshots during answers and runs multimodal Gemini evaluation to detect expressions (*Confident, Nervous, Puzzled*).
   * Adapts the interviewer's guiding tone dynamically based on candidate body language.
-  * *Mock representation of HUD interface metrics:*
-    ![SkillWise.ai HUD Mockup](./assets/dashboard_hud_mockup.png)
+  
 * **Hiring Panel Deliberation**: Concludes interviews (5-question limit) by simulating a panel evaluation from three distinct AI personas:
   1. **Tech Lead**: Evaluates React/frontend coding depth and TypeScript correct patterns.
   2. **System Architect**: Analyzes scaling, API layouts, performance, and caching.
