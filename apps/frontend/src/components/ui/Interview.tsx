@@ -305,35 +305,35 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
 
   if (loading) {
     return (
-      <div className="h-screen w-screen bg-[#030014] flex flex-col justify-center items-center text-white relative">
+      <div className="h-screen w-screen bg-[#fcf8f6] flex flex-col justify-center items-center text-[#292524] relative">
         <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
-        <Loader2 className="h-12 w-12 animate-spin text-purple-500 mb-4 z-10" />
-        <p className="text-slate-400 text-sm font-semibold animate-pulse z-10">Analyzing GitHub portfolio and initializing sandbox...</p>
+        <Loader2 className="h-12 w-12 animate-spin text-rose-500 mb-4 z-10" />
+        <p className="text-stone-500 text-sm font-bold animate-pulse z-10">Analyzing GitHub portfolio and initializing sandbox...</p>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-[#030014] text-slate-100 flex flex-col items-center p-4 md:p-8 selection:bg-purple-600 selection:text-white overflow-hidden">
+    <div className="relative min-h-screen bg-[#fcf8f6] text-[#292524] flex flex-col items-center p-4 md:p-8 selection:bg-rose-200 selection:text-rose-900 overflow-hidden">
       {/* Background Grids & Orbs */}
       <div className="absolute inset-0 bg-grid-pattern opacity-100 pointer-events-none z-0" />
-      <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-purple-900/10 top-[-100px] left-[10%] pointer-events-none" />
-      <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-indigo-900/5 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
+      <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-rose-200/30 top-[-100px] left-[10%] pointer-events-none" />
+      <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-pink-100/20 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
 
       {/* Header */}
       <header className="w-full max-w-5xl flex justify-between items-center mb-6 z-10 relative">
         <Button 
           variant="ghost" 
           onClick={() => navigate("/")}
-          className="text-slate-400 hover:text-white hover:bg-purple-950/40 border border-transparent hover:border-purple-800/30 gap-2 rounded-xl transition-all"
+          className="text-stone-500 hover:text-stone-900 hover:bg-rose-100/40 border border-transparent hover:border-rose-200/50 gap-2 rounded-xl transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
           Leave Interview
         </Button>
         
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-[#0b081b] border border-purple-950/60 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-400">
-            <span className={`h-2.5 w-2.5 rounded-full ${status === 'listening' ? 'bg-red-500 animate-pulse' : 'bg-purple-500'}`} />
+          <div className="flex items-center gap-1.5 bg-[#fefaf8] border border-rose-100/60 px-3 py-1.5 rounded-full text-xs font-semibold text-stone-550 shadow-xs">
+            <span className={`h-2.5 w-2.5 rounded-full ${status === 'listening' ? 'bg-red-500 animate-pulse' : 'bg-rose-500'}`} />
             Status: {status.toUpperCase()}
           </div>
 
@@ -341,9 +341,9 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
             variant="outline" 
             size="icon" 
             onClick={toggleMute}
-            className="rounded-xl border-purple-950/60 hover:bg-purple-950/30 text-slate-300"
+            className="rounded-xl border-rose-200 hover:bg-rose-50 text-stone-600 shadow-xs"
           >
-            {isMuted ? <VolumeX className="h-4 w-4 text-red-400" /> : <Volume2 className="h-4 w-4 text-emerald-400" />}
+            {isMuted ? <VolumeX className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4 text-emerald-500" />}
           </Button>
         </div>
       </header>
@@ -355,57 +355,57 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
         <section className="lg:col-span-1 flex flex-col gap-6">
           
           {/* GitHub Metadata Card */}
-          <Card className="bg-[#0b081b]/70 border-purple-950/70 border-glow-violet backdrop-blur-xl rounded-2xl shadow-2xl flex-1 flex flex-col">
-            <CardHeader className="border-b border-purple-950/40">
-              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-400" />
+          <Card className="bg-white border border-rose-100/60 border-glow-rose backdrop-blur-xl rounded-2xl shadow-xl flex-1 flex flex-col">
+            <CardHeader className="border-b border-rose-100/40">
+              <CardTitle className="text-lg font-extrabold text-[#1c1917] flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-rose-500" />
                 Candidate Profile
               </CardTitle>
-              <CardDescription className="text-slate-400">Customized interview criteria</CardDescription>
+              <CardDescription className="text-stone-500">Customized interview criteria</CardDescription>
             </CardHeader>
             <CardContent className="py-6 flex-1 flex flex-col justify-between">
               {githubData ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     {githubData.avatarUrl ? (
-                      <img src={githubData.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full border border-purple-950 object-cover" />
+                      <img src={githubData.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full border border-rose-100 object-cover" />
                     ) : (
-                      <div className="h-12 w-12 rounded-full bg-purple-900/30 flex items-center justify-center border border-purple-700/50 text-purple-300 font-bold">
+                      <div className="h-12 w-12 rounded-full bg-rose-550/10 flex items-center justify-center border border-rose-200/50 text-rose-600 font-bold">
                         {githubData.login ? githubData.login.substring(0,2).toUpperCase() : "GH"}
                       </div>
                     )}
                     <div>
-                      <h3 className="font-semibold text-white">{githubData.name || githubData.login || "Developer"}</h3>
-                      <p className="text-xs text-slate-450">@{githubData.login || "github"}</p>
+                      <h3 className="font-bold text-stone-850">{githubData.name || githubData.login || "Developer"}</h3>
+                      <p className="text-xs text-stone-400">@{githubData.login || "github"}</p>
                     </div>
                   </div>
 
-                  <div className="border-t border-purple-950/40 pt-4 space-y-2.5">
+                  <div className="border-t border-rose-100/40 pt-4 space-y-2.5">
                     {githubData.bio && (
-                      <p className="text-xs text-slate-400 italic">"{githubData.bio}"</p>
+                      <p className="text-xs text-stone-500 italic">"{githubData.bio}"</p>
                     )}
                     {githubData.publicRepos !== undefined && (
-                      <div className="flex justify-between text-xs text-slate-355">
+                      <div className="flex justify-between text-xs text-stone-600 font-semibold">
                         <span>Public Repos:</span>
-                        <span className="font-semibold text-white">{githubData.publicRepos}</span>
+                        <span className="font-bold text-stone-900">{githubData.publicRepos}</span>
                       </div>
                     )}
                     {githubData.followers !== undefined && (
-                      <div className="flex justify-between text-xs text-slate-355">
+                      <div className="flex justify-between text-xs text-stone-600 font-semibold">
                         <span>Followers:</span>
-                        <span className="font-semibold text-white">{githubData.followers}</span>
+                        <span className="font-bold text-stone-900">{githubData.followers}</span>
                       </div>
                     )}
                   </div>
 
                   {githubData.pinnedRepos && githubData.pinnedRepos.length > 0 && (
-                    <div className="border-t border-purple-950/40 pt-4">
-                      <p className="text-xs font-semibold text-slate-300 mb-2">Top Repositories:</p>
+                    <div className="border-t border-rose-100/40 pt-4">
+                      <p className="text-xs font-bold text-stone-700 mb-2">Top Repositories:</p>
                       <div className="space-y-2">
                         {githubData.pinnedRepos.slice(0, 3).map((repo: any, index: number) => (
-                          <div key={index} className="text-xs bg-[#04010b] border border-purple-950/60 p-2.5 rounded-lg">
-                            <p className="font-medium text-purple-300">{repo.name}</p>
-                            {repo.language && <p className="text-[10px] text-slate-500 mt-1">● {repo.language}</p>}
+                          <div key={index} className="text-xs bg-[#faf6f3] border border-rose-100/30 p-2.5 rounded-lg">
+                            <p className="font-bold text-rose-600">{repo.name}</p>
+                            {repo.language && <p className="text-[10px] text-stone-500 mt-1">● {repo.language}</p>}
                           </div>
                         ))}
                       </div>
@@ -413,22 +413,22 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                   )}
                 </div>
               ) : (
-                <div className="h-full flex flex-col justify-center items-center text-slate-500 text-sm">
-                  <AlertCircle className="h-8 w-8 mb-2 text-slate-600" />
+                <div className="h-full flex flex-col justify-center items-center text-stone-400 text-sm">
+                  <AlertCircle className="h-8 w-8 mb-2 text-stone-300" />
                   No profile metadata loaded.
                 </div>
               )}
 
               {/* Status wave at bottom of left panel */}
               {status !== "idle" && status !== "completed" && (
-                <div className="mt-8 border-t border-purple-950/40 pt-6 flex flex-col items-center">
-                  <p className="text-xs text-slate-500 font-semibold mb-4 uppercase tracking-wider">Sound Wave</p>
+                <div className="mt-8 border-t border-rose-100/40 pt-6 flex flex-col items-center">
+                  <p className="text-xs text-stone-400 font-extrabold mb-4 uppercase tracking-wider">Sound Wave</p>
                   <div className="flex items-center gap-1.5 h-10">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((bar) => {
                       let animClass = "";
                       if (status === "listening") animClass = "animate-pulse bg-red-500";
                       else if (status === "speaking") animClass = "animate-pulse bg-emerald-500";
-                      else if (status === "processing") animClass = "animate-pulse bg-purple-500";
+                      else if (status === "processing") animClass = "animate-pulse bg-rose-500";
                       
                       // Alternate heights for visual variety
                       const height = bar % 3 === 0 ? "h-8" : bar % 2 === 0 ? "h-6" : "h-4";
@@ -436,7 +436,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                       return (
                         <span 
                           key={bar} 
-                          className={`w-1 rounded-full bg-purple-950 transition-all ${height} ${animClass} ${delay}`} 
+                          className={`w-1 rounded-full bg-rose-100 transition-all ${height} ${animClass} ${delay}`} 
                           style={{
                             animationDuration: status === "listening" ? "0.6s" : "1.2s",
                             animationDelay: `${bar * 0.1}s`
@@ -455,27 +455,27 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
         <section className="lg:col-span-2 flex flex-col gap-6 min-h-[500px]">
           
           {/* Main Visualizer or Chat Card */}
-          <Card className="bg-[#0b081b]/70 border-purple-950/70 border-glow-violet backdrop-blur-xl rounded-2xl flex-1 flex flex-col overflow-hidden shadow-2xl">
+          <Card className="bg-white border border-rose-100/60 border-glow-rose backdrop-blur-xl rounded-2xl flex-1 flex flex-col overflow-hidden shadow-2xl">
             
             {status === "idle" && (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0,transparent_70%)]">
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.04)_0,transparent_70%)]">
                 <div className="relative mb-6">
                   {/* Glowing rings */}
-                  <div className="absolute -inset-4 rounded-full bg-purple-500/10 animate-ping pointer-events-none" />
-                  <div className="absolute -inset-1 rounded-full bg-purple-500/20 blur-sm pointer-events-none" />
-                  <div className="h-24 w-24 bg-gradient-to-tr from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white border-2 border-purple-400 shadow-2xl relative">
+                  <div className="absolute -inset-4 rounded-full bg-rose-500/10 animate-ping pointer-events-none" />
+                  <div className="absolute -inset-1 rounded-full bg-rose-500/20 blur-sm pointer-events-none" />
+                  <div className="h-24 w-24 bg-gradient-to-tr from-rose-500 to-pink-500 rounded-full flex items-center justify-center text-white border-2 border-rose-400 shadow-xl relative">
                     <Sparkles className="h-10 w-10 text-white animate-pulse" />
                   </div>
                 </div>
                 
-                <h2 className="text-2xl font-extrabold text-white tracking-tight mb-2">Are you ready to begin?</h2>
-                <p className="text-slate-400 text-sm max-w-md mb-8">
+                <h2 className="text-2xl font-extrabold text-stone-900 tracking-tight mb-2">Are you ready to begin?</h2>
+                <p className="text-stone-600 text-sm max-w-md mb-8">
                   This mock session simulates a live engineering interview. Make sure your microphone is enabled, you are in a quiet room, and your sound is on.
                 </p>
 
                 {!speechSupported && (
-                  <div className="flex items-center gap-2 bg-red-955/50 border border-red-900/50 p-4 rounded-xl text-red-300 text-xs text-left max-w-md mb-6">
-                    <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 p-4 rounded-xl text-red-800 text-xs text-left max-w-md mb-6">
+                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
                     <p>Web Speech API is not supported in this browser. You can still participate in the interview by typing your answers using the text override block below.</p>
                   </div>
                 )}
@@ -483,7 +483,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                 <Button 
                   size="lg" 
                   onClick={startInterview}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/30 rounded-xl px-8 py-6 text-base font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-450 hover:to-pink-455 text-white shadow-lg shadow-rose-250/20 rounded-xl px-8 py-6 text-base font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   <Play className="h-5 w-5 fill-current" />
                   Start Voice Interview
@@ -502,15 +502,15 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                     >
                       <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border ${
                         msg.role === 'user' 
-                          ? 'bg-slate-800 border-slate-700 text-slate-300' 
-                          : 'bg-purple-955/80 border-purple-800 text-purple-300'
+                          ? 'bg-stone-100 border-stone-200 text-stone-600' 
+                          : 'bg-rose-50 border border-rose-200 text-rose-600'
                       }`}>
                         {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                       </div>
-                      <div className={`p-4 rounded-2xl text-sm shadow-sm ${
+                      <div className={`p-4 rounded-2xl text-sm shadow-sm font-medium ${
                         msg.role === 'user'
-                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none'
-                          : 'bg-[#0f0a21]/60 border border-purple-950/50 text-slate-200 rounded-tl-none'
+                          ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-tr-none'
+                          : 'bg-[#faf6f3] border border-rose-100/35 text-stone-850 rounded-tl-none'
                       }`}>
                         <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                       </div>
@@ -520,10 +520,10 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                   {/* Local visualizer for active voice input */}
                   {status === "listening" && transcript && (
                     <div className="flex gap-3 max-w-[85%] ml-auto flex-row-reverse animate-fade-in">
-                      <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-red-955/50 border border-red-800/50 text-red-400">
+                      <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-red-50 border border-red-200 text-red-500">
                         <Mic className="h-4 w-4 animate-pulse" />
                       </div>
-                      <div className="p-4 rounded-2xl text-sm bg-red-955/20 border border-red-900/30 text-red-200 rounded-tr-none italic font-medium">
+                      <div className="p-4 rounded-2xl text-sm bg-red-50 border border-red-200 text-red-700 rounded-tr-none italic font-bold">
                         {transcript}
                       </div>
                     </div>
@@ -532,12 +532,12 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                   {/* Processing animation */}
                   {status === "processing" && (
                     <div className="flex gap-3 max-w-[80%] mr-auto items-center">
-                      <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-purple-955/80 border border-purple-800 text-purple-300">
+                      <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-rose-50 border border-rose-200 text-rose-600">
                         <Bot className="h-4 w-4" />
                       </div>
-                      <div className="flex items-center gap-2 px-4 py-3 bg-[#0f0a21]/60 border border-purple-950/50 rounded-2xl rounded-tl-none">
-                        <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
-                        <span className="text-xs text-slate-405 font-medium">Interviewer is thinking...</span>
+                      <div className="flex items-center gap-2 px-4 py-3 bg-[#faf6f3] border border-rose-100/25 rounded-2xl rounded-tl-none shadow-xs">
+                        <Loader2 className="h-4 w-4 animate-spin text-rose-500" />
+                        <span className="text-xs text-stone-500 font-bold">Interviewer is thinking...</span>
                       </div>
                     </div>
                   )}
@@ -546,9 +546,9 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                 </div>
 
                 {/* Microphone / controls center */}
-                <div className="bg-[#05030f]/60 border-t border-purple-950/20 p-6 flex flex-col items-center justify-center gap-4">
+                <div className="bg-stone-50/80 border-t border-rose-100/40 p-6 flex flex-col items-center justify-center gap-4">
                   {errorText && (
-                    <div className="w-full flex items-center gap-2 text-red-400 bg-red-955/20 border border-red-900/20 px-3 py-2 rounded-xl text-xs">
+                    <div className="w-full flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-xl text-xs font-bold">
                       <AlertCircle className="h-4 w-4 shrink-0" />
                       <p>{errorText}</p>
                     </div>
@@ -569,7 +569,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                               setStatus("listening");
                               startListening();
                             }}
-                            className="rounded-full h-11 w-11 border-purple-950/60 text-slate-400 hover:text-white"
+                            className="rounded-full h-11 w-11 border-rose-200 text-stone-550 hover:bg-stone-100 shadow-xs"
                             title="Skip Speaking & Start Answering"
                           >
                             <RotateCcw className="h-4 w-4" />
@@ -581,13 +581,13 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                           {/* Pulser rings */}
                           {status === "listening" && (
                             <>
-                              <div className="absolute -inset-3 rounded-full bg-red-550/10 animate-ping" />
-                              <div className="absolute -inset-1.5 rounded-full bg-red-555/20 blur-xs" />
+                              <div className="absolute -inset-3 rounded-full bg-red-500/10 animate-ping" />
+                              <div className="absolute -inset-1.5 rounded-full bg-red-500/20 blur-xs" />
                             </>
                           )}
                           {status === "speaking" && (
                             <>
-                              <div className="absolute -inset-3 rounded-full bg-emerald-555/10 animate-pulse" />
+                              <div className="absolute -inset-3 rounded-full bg-emerald-500/10 animate-pulse" />
                             </>
                           )}
 
@@ -597,10 +597,10 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                             disabled={status === "processing"}
                             className={`rounded-full h-16 w-16 shadow-lg border-2 text-white transition-all scale-[1.05] hover:scale-[1.1] active:scale-[0.95] ${
                               status === "listening"
-                                ? "bg-red-600 border-red-400 hover:bg-red-500"
+                                ? "bg-red-500 border-red-400 hover:bg-red-650"
                                 : status === "speaking"
-                                ? "bg-emerald-600 border-emerald-400 hover:bg-emerald-500"
-                                : "bg-purple-600 border-purple-400 hover:bg-purple-500"
+                                ? "bg-emerald-500 border-emerald-400 hover:bg-emerald-650"
+                                : "bg-rose-500 border-rose-400 hover:bg-rose-600"
                             }`}
                           >
                             {status === "listening" ? (
@@ -618,7 +618,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                           variant="outline" 
                           size="icon" 
                           onClick={finishInterview}
-                          className="rounded-full h-11 w-11 border-purple-950/60 text-red-400 hover:text-red-300 hover:bg-red-955/20"
+                          className="rounded-full h-11 w-11 border-rose-200 text-red-500 hover:bg-red-50 shadow-xs"
                           title="Finish & Save Interview"
                         >
                           <Square className="h-4 w-4 fill-current text-red-500" />
@@ -626,7 +626,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                       </div>
 
                       {/* Informational Subtitle */}
-                      <p className="text-xs text-slate-500 font-medium">
+                      <p className="text-xs text-stone-500 font-bold">
                         {status === "listening" 
                           ? transcript 
                             ? "Press the button or stop talking to submit your answer" 
@@ -639,13 +639,13 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                       </p>
 
                       {/* Text Entry Fallback Override */}
-                      <div className="w-full flex gap-2 border-t border-purple-955/25 pt-4 mt-2">
+                      <div className="w-full flex gap-2 border-t border-rose-200/50 pt-4 mt-2">
                         <input
                           type="text"
                           value={manualInput}
                           onChange={(e) => setManualInput(e.target.value)}
                           placeholder="Or type your response here instead..."
-                          className="flex-1 bg-[#060312] border border-purple-900/35 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          className="flex-1 bg-stone-50 border border-rose-200/65 rounded-xl px-4 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               submitAnswer(manualInput);
@@ -655,7 +655,7 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                         <Button
                           size="sm"
                           onClick={() => submitAnswer(manualInput)}
-                          className="bg-purple-650 hover:bg-purple-500 rounded-xl text-xs gap-1.5"
+                          className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs gap-1.5 shadow-sm"
                         >
                           <Send className="h-3 w-3" />
                           Send
@@ -665,12 +665,12 @@ Keep your response short (2-3 sentences), professional, and encouraging. Focus o
                   ) : (
                     // Completed View
                     <div className="text-center py-4 flex flex-col items-center">
-                      <CheckCircle2 className="h-12 w-12 text-emerald-400 mb-2" />
-                      <h3 className="font-bold text-white text-lg">Interview Completed!</h3>
-                      <p className="text-xs text-slate-400 mt-1 max-w-sm mb-4">Your answers have been stored and processed successfully.</p>
+                      <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-2" />
+                      <h3 className="font-extrabold text-stone-900 text-lg">Interview Completed!</h3>
+                      <p className="text-xs text-stone-600 mt-1 max-w-sm mb-4 font-semibold">Your answers have been stored and processed successfully.</p>
                       <Button 
                         onClick={() => navigate("/")}
-                        className="px-6 py-2.5 text-xs font-semibold rounded-xl bg-purple-900/40 border border-purple-500/30 hover:bg-purple-950/60 hover:border-purple-500/50 text-purple-300 transition-all shadow-md shadow-purple-550/10"
+                        className="px-6 py-2.5 text-xs font-bold rounded-xl bg-rose-50 border border-rose-200/60 hover:bg-rose-100 text-rose-600 transition-all shadow-sm"
                       >
                         Return Home
                       </Button>
