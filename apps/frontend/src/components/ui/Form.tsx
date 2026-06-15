@@ -101,35 +101,35 @@ export function Form() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#fcf8f6] overflow-x-hidden flex flex-col font-sans selection:bg-rose-200 selection:text-rose-900">
+    <div className="relative min-h-screen bg-[#7a7dcd] overflow-x-hidden flex flex-col font-sans selection:bg-[#ff5a1a] selection:text-white">
       {/* Background Grids & Orbs */}
       <div className="absolute inset-0 bg-grid-pattern opacity-100 pointer-events-none z-0" />
-      <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-rose-200/40 top-[-100px] left-[10%] pointer-events-none" />
-      <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-pink-100/30 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
-      <div className="glow-orb animate-pulse-glow w-[400px] h-[400px] bg-amber-100/20 bottom-[10%] left-[20%] pointer-events-none" style={{ animationDelay: "4s" }} />
+      <div className="glow-orb animate-pulse-glow w-[500px] h-[500px] bg-white/10 top-[-100px] left-[10%] pointer-events-none" />
+      <div className="glow-orb animate-pulse-glow w-[600px] h-[600px] bg-[#ff5a1a]/5 top-[30%] right-[5%] pointer-events-none" style={{ animationDelay: "2s" }} />
+      <div className="glow-orb animate-pulse-glow w-[400px] h-[400px] bg-white/5 bottom-[10%] left-[20%] pointer-events-none" style={{ animationDelay: "4s" }} />
 
       {/* Navigation Header */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 h-20 flex justify-between items-center border-b border-rose-100/40 backdrop-blur-xl bg-[#fcf8f6]/50">
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 h-20 flex justify-between items-center border-b border-[#121212] backdrop-blur-xl bg-[#7a7dcd]/80">
         <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center shadow-md shadow-rose-550/20">
+          <div className="h-9 w-9 rounded-xl bg-[#ff5a1a] border border-[#121212] flex items-center justify-center shadow-xs">
             <Cpu className="h-5 w-5 text-white" />
           </div>
-          <span className="font-extrabold text-xl tracking-tight text-[#292524]">
-            DevPrep<span className="text-rose-500 font-semibold">.ai</span>
+          <span className="font-extrabold text-xl tracking-tight text-[#121212]">
+            SkillWise<span className="text-[#ff5a1a] font-semibold">.ai</span>
           </span>
         </div>
         
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#57534e]">
-          <a href="#features" className="hover:text-rose-500 transition-colors">Features</a>
-          <a href="#how-it-works" className="hover:text-rose-500 transition-colors">How it Works</a>
-          <a href="#simulator" className="hover:text-rose-500 transition-colors">Simulator</a>
-          <a href="#github-connect" className="text-rose-500 hover:text-rose-600 transition-colors font-bold">Start Interview</a>
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#121212]">
+          <a href="#features" className="hover:text-[#ff5a1a] transition-colors">Features</a>
+          <a href="#how-it-works" className="hover:text-[#ff5a1a] transition-colors">How it Works</a>
+          <a href="#simulator" className="hover:text-[#ff5a1a] transition-colors">Simulator</a>
+          <a href="#github-connect" className="text-[#ff5a1a] hover:text-[#ff5a1a]/80 transition-colors font-bold">Start Interview</a>
         </nav>
 
         <div>
           <a 
             href="#github-connect"
-            className="px-4 py-2.5 text-xs font-bold rounded-xl bg-rose-50 border border-rose-200/60 hover:bg-rose-100 text-rose-600 transition-all shadow-sm"
+            className="px-4 py-2.5 text-xs font-bold rounded-xl bg-[#dfdcce] border border-[#121212] hover:bg-[#cfcbae] text-[#121212] transition-all shadow-xs"
           >
             Start Free Practice
           </a>
@@ -144,42 +144,42 @@ export function Form() {
           {/* Left Column: Heading and GitHub submission */}
           <div className="flex-1 flex flex-col items-start text-left max-w-2xl">
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-50/70 border border-rose-200 text-[11px] font-bold text-rose-600 mb-6 tracking-wide shadow-sm animate-float">
-              <Sparkles className="h-3.5 w-3.5 text-rose-500" />
-              <span>Introducing DevPrep AI 1.0</span>
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#dfdcce] border border-[#121212] text-[11px] font-bold text-[#ff5a1a] mb-6 tracking-wide shadow-xs animate-float">
+              <Sparkles className="h-3.5 w-3.5 text-[#ff5a1a]" />
+              <span>Introducing SkillWise AI 1.0</span>
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#1c1917] leading-[1.15] mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#121212] leading-[1.15] mb-6">
               Your Personal AI <br />
-              <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 bg-clip-text text-transparent drop-shadow-sm">
+              <span className="text-[#ff5a1a] drop-shadow-xs">
                 Technical Interviewer
               </span>
             </h1>
 
             {/* Paragraph description */}
-            <p className="text-[#57534e] text-base sm:text-lg font-medium leading-relaxed mb-8">
+            <p className="text-[#121212]/85 text-base sm:text-lg font-semibold leading-relaxed mb-8">
               Turn your GitHub repositories into high-fidelity technical mock interviews. 
               Our AI scraper analyzes your codebase structure, understands your actual tech stack, 
               and runs interactive voice-based simulations custom-built for your profile.
             </p>
 
             {/* Interactive GitHub URL Collector Card */}
-            <div id="github-connect" className="w-full bg-white border border-rose-100/60 p-6 md:p-8 rounded-2xl shadow-xl shadow-rose-100/30 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(244,63,94,0.03)_0,transparent_50%)] pointer-events-none" />
+            <div id="github-connect" className="w-full border-brutalist-sand p-6 md:p-8 rounded-2xl shadow-xs relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,90,26,0.06)_0,transparent_50%)] pointer-events-none" />
               
-              <h3 className="text-[#1c1917] font-extrabold text-lg mb-2 flex items-center gap-2">
-                <Github className="h-5 w-5 text-rose-500" />
+              <h3 className="text-[#121212] font-extrabold text-lg mb-2 flex items-center gap-2">
+                <Github className="h-5 w-5 text-[#ff5a1a]" />
                 Analyze Codebase & Start Mock Session
               </h3>
-              <p className="text-[#57534e] text-xs mb-6">
+              <p className="text-[#121212]/80 text-xs mb-6">
                 Enter your GitHub username or profile URL below. Our system builds a structural evaluation profile based on your public projects.
               </p>
 
               <form onSubmit={onSubmit} className="space-y-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <span className="text-stone-400 text-xs font-bold">github.com/</span>
+                    <span className="text-[#121212]/60 text-xs font-bold">github.com/</span>
                   </div>
                   <input
                     type="text"
@@ -187,11 +187,11 @@ export function Form() {
                     onChange={(e) => handleGithubChange(e.target.value)}
                     placeholder="username"
                     disabled={loading}
-                    className="w-full bg-[#fdfcfa] border border-rose-200/50 rounded-xl pl-[96px] pr-4 py-3.5 text-sm text-stone-850 placeholder-stone-400 focus:outline-none focus:border-rose-450 focus:ring-1 focus:ring-rose-450 transition-all font-medium"
+                    className="w-full bg-[#e6e4d5] border border-[#121212] rounded-xl pl-[96px] pr-4 py-3.5 text-sm text-[#121212] placeholder-stone-500/50 focus:outline-none focus:border-[#ff5a1a] focus:ring-1 focus:ring-[#ff5a1a]/30 transition-all font-semibold"
                   />
                 </div>
                 {validationError && (
-                  <p className="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                  <p className="text-red-650 text-xs font-bold mt-1 flex items-center gap-1">
                     ● {validationError}
                   </p>
                 )}
@@ -199,11 +199,11 @@ export function Form() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-450 hover:to-pink-455 text-white font-bold text-sm tracking-wide shadow-md shadow-rose-250/20 hover:shadow-rose-250/40 transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#ff5a1a] hover:bg-[#e04f14] text-white border border-[#121212] font-bold text-sm tracking-wide shadow-xs transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
                       Analyzing Repositories...
                     </>
                   ) : (
@@ -215,17 +215,17 @@ export function Form() {
                 </button>
               </form>
 
-              <div className="mt-5 flex items-center justify-between text-[11px] text-stone-500 border-t border-rose-100/40 pt-4">
-                <span className="flex items-center gap-1.5 font-semibold">
-                  <Shield className="h-3 w-3 text-rose-500" />
+              <div className="mt-5 flex items-center justify-between text-[11px] text-[#121212]/75 border-t border-[#121212]/15 pt-4">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Shield className="h-3 w-3 text-[#ff5a1a]" />
                   Public repos read-only
                 </span>
-                <span className="flex items-center gap-1.5 font-semibold">
-                  <CheckCircle2 className="h-3 w-3 text-rose-500" />
+                <span className="flex items-center gap-1.5 font-bold">
+                  <CheckCircle2 className="h-3 w-3 text-[#ff5a1a]" />
                   Voice mock ready
                 </span>
-                <span className="flex items-center gap-1.5 font-semibold">
-                  <Activity className="h-3 w-3 text-rose-500" />
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Activity className="h-3 w-3 text-[#ff5a1a]" />
                   Free 100% evaluated
                 </span>
               </div>
@@ -235,21 +235,21 @@ export function Form() {
           {/* Right Column: Visual Dashboard / Live Preview */}
           <div id="simulator" className="flex-1 w-full lg:max-w-xl relative flex justify-center">
             {/* Background glowing sphere behind container */}
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-300 to-pink-300 opacity-20 blur-xl animate-pulse-glow pointer-events-none" />
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#ff5a1a]/15 to-white/10 opacity-25 blur-xl animate-pulse-glow pointer-events-none" />
 
             {/* Container */}
-            <div className="w-full bg-white border border-rose-100/60 rounded-2xl overflow-hidden shadow-2xl relative">
+            <div className="w-full border-brutalist-sand rounded-2xl overflow-hidden shadow-xs relative">
               
               {/* Fake Menu bar */}
-              <div className="bg-stone-50/80 px-4 py-3 border-b border-rose-100/40 flex items-center justify-between">
+              <div className="bg-[#dfdcce] px-4 py-3 border-b border-[#121212] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-yellow-450/80" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-red-500/80 border border-[#121212]/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/80 border border-[#121212]/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#ff5a1a]/80 border border-[#121212]/30" />
                 </div>
-                <div className="text-[10px] text-rose-550 font-mono font-semibold flex items-center gap-1.5 bg-stone-100/50 px-3 py-1 rounded-md border border-rose-100/30">
-                  <Terminal className="h-3 w-3 text-rose-500" />
-                  devprep-dashboard.ai
+                <div className="text-[10px] text-[#ff5a1a] font-mono font-bold flex items-center gap-1.5 bg-white/40 px-3 py-1 rounded-md border border-[#121212]">
+                  <Terminal className="h-3 w-3 text-[#ff5a1a]" />
+                  skillwise-dashboard.ai
                 </div>
                 <div className="w-6" />
               </div>
@@ -257,49 +257,49 @@ export function Form() {
               {/* Simulated UI Content */}
               <div className="p-5 space-y-5">
                 {/* 1. Codebase Scanner Simulation */}
-                <div className="bg-[#faf6f3] border border-rose-100/25 p-4 rounded-xl font-mono text-xs text-stone-700 space-y-2.5 relative">
-                  <div className="absolute top-3 right-3 flex items-center gap-1 text-[10px] text-rose-500 font-semibold">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
+                <div className="bg-[#e6e4d5] border border-[#121212]/30 p-4 rounded-xl font-mono text-xs text-[#121212] space-y-2.5 relative">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 text-[10px] text-[#ff5a1a] font-bold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#ff5a1a] animate-ping" />
                     scanning...
                   </div>
                   
-                  <p className="text-rose-600 font-bold flex items-center gap-1.5">
+                  <p className="text-[#ff5a1a] font-bold flex items-center gap-1.5">
                     <span>$</span> analyze --github-profile=vartika6451
                   </p>
                   
-                  <div className="space-y-1 text-stone-600 text-[11px] leading-relaxed">
+                  <div className="space-y-1 text-[#121212]/85 text-[11px] leading-relaxed font-semibold">
                     <p className="flex items-center gap-2">
-                      <span className="text-emerald-600 font-bold">✓</span> Scraped 12 repositories
+                      <span className="text-[#ff5a1a] font-bold">✓</span> Scraped 12 repositories
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="text-emerald-600 font-bold">✓</span> Detected stack: React, TypeScript, Bun, SQLite
+                      <span className="text-[#ff5a1a] font-bold">✓</span> Detected stack: React, TypeScript, Bun, SQLite
                     </p>
-                    <p className="flex items-center gap-2 text-rose-600 font-semibold">
-                      <Sparkles className="h-3.5 w-3.5 text-rose-500 animate-pulse" />
+                    <p className="flex items-center gap-2 text-[#ff5a1a] font-bold">
+                      <Sparkles className="h-3.5 w-3.5 text-[#ff5a1a] animate-pulse" />
                       Generated 8 custom core mock questions
                     </p>
                   </div>
                 </div>
 
                 {/* 2. Interactive Voice Orb Simulator */}
-                <div className="bg-[#fefaf8] border border-rose-100/30 p-5 rounded-xl flex flex-col items-center text-center space-y-4 shadow-sm">
-                  <p className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">Voice Mock Session</p>
+                <div className="bg-[#e6e4d5] border border-[#121212]/30 p-5 rounded-xl flex flex-col items-center text-center space-y-4">
+                  <p className="text-[10px] text-[#121212]/60 font-extrabold uppercase tracking-wider">Voice Mock Session</p>
                   
                   {/* Glowing Animated Audio Orb */}
                   <div className="relative flex items-center justify-center h-20 w-20">
-                    <div className="absolute inset-0 bg-rose-500/15 rounded-full animate-ping pointer-events-none" />
-                    <div className="absolute inset-2 bg-pink-400/20 rounded-full blur-md animate-pulse-glow pointer-events-none" />
-                    <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-rose-500 to-pink-500 border border-rose-300/30 flex items-center justify-center text-white shadow-md shadow-rose-500/20 hover:scale-[1.03] transition-transform cursor-pointer">
+                    <div className="absolute inset-0 bg-[#ff5a1a]/15 rounded-full animate-ping pointer-events-none" />
+                    <div className="absolute inset-2 bg-[#ff5a1a]/20 rounded-full blur-xs animate-pulse-glow pointer-events-none" />
+                    <div className="h-14 w-14 rounded-full bg-[#ff5a1a] border border-[#121212] flex items-center justify-center text-white shadow-xs hover:scale-[1.03] transition-transform cursor-pointer">
                       <Mic className="h-6 w-6 text-white animate-pulse" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <p className="text-xs text-stone-800 font-bold flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-[#121212] font-bold flex items-center justify-center gap-1.5">
                       <span>Interviewer AI</span> 
-                      <span className="bg-rose-50 text-rose-600 text-[9px] px-1.5 py-0.5 rounded border border-rose-200/50 font-mono font-bold">LIVE SPEECH</span>
+                      <span className="bg-[#ff5a1a]/10 text-[#ff5a1a] text-[9px] px-1.5 py-0.5 rounded border border-[#ff5a1a]/30 font-mono font-bold">LIVE SPEECH</span>
                     </p>
-                    <p className="text-[11px] text-stone-600 italic max-w-sm">
+                    <p className="text-[11px] text-[#121212]/80 italic max-w-sm font-semibold">
                       "Explain your implementation of the rate-limiter middleware. How does it manage memory consumption under high load?"
                     </p>
                   </div>
@@ -309,7 +309,7 @@ export function Form() {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                       <span 
                         key={i} 
-                        className={`w-0.5 rounded-full bg-rose-450 transition-all ${
+                        className={`w-0.5 rounded-full bg-[#ff5a1a] transition-all ${
                           i % 3 === 0 ? "h-3" : i % 2 === 0 ? "h-4" : "h-2"
                         } animate-pulse`} 
                         style={{ animationDelay: `${i * 0.15}s`, animationDuration: "1s" }}
@@ -319,20 +319,20 @@ export function Form() {
                 </div>
 
                 {/* 3. Performance Scoring & Evaluation preview */}
-                <div className="bg-[#faf6f3] border border-rose-100/35 p-4 rounded-xl grid grid-cols-3 gap-3">
-                  <div className="flex flex-col items-center justify-center bg-white border border-rose-100/20 p-2.5 rounded-lg text-center shadow-xs">
-                    <span className="text-[9px] text-stone-400 font-extrabold uppercase tracking-wider mb-1">Score</span>
-                    <span className="text-lg font-extrabold text-rose-600 font-mono">87/100</span>
+                <div className="bg-[#e6e4d5] border border-[#121212]/30 p-4 rounded-xl grid grid-cols-3 gap-3">
+                  <div className="flex flex-col items-center justify-center bg-[#dfdcce] border border-[#121212] p-2.5 rounded-lg text-center shadow-xs">
+                    <span className="text-[9px] text-[#121212]/60 font-extrabold uppercase tracking-wider mb-1">Score</span>
+                    <span className="text-lg font-extrabold text-[#ff5a1a] font-mono">87/100</span>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center bg-white border border-rose-100/20 p-2.5 rounded-lg text-center shadow-xs">
-                    <span className="text-[9px] text-stone-400 font-extrabold uppercase tracking-wider mb-1">Architecture</span>
-                    <span className="text-xs font-bold text-stone-800">Advanced</span>
+                  <div className="flex flex-col items-center justify-center bg-[#dfdcce] border border-[#121212] p-2.5 rounded-lg text-center shadow-xs">
+                    <span className="text-[9px] text-[#121212]/60 font-extrabold uppercase tracking-wider mb-1">Architecture</span>
+                    <span className="text-xs font-bold text-[#121212]">Advanced</span>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center bg-white border border-rose-100/20 p-2.5 rounded-lg text-center shadow-xs">
-                    <span className="text-[9px] text-stone-400 font-extrabold uppercase tracking-wider mb-1">Focus</span>
-                    <span className="text-[9px] font-bold text-rose-500">Scalability</span>
+                  <div className="flex flex-col items-center justify-center bg-[#dfdcce] border border-[#121212] p-2.5 rounded-lg text-center shadow-xs">
+                    <span className="text-[9px] text-[#121212]/60 font-extrabold uppercase tracking-wider mb-1">Focus</span>
+                    <span className="text-[9px] font-bold text-[#ff5a1a]">Scalability</span>
                   </div>
                 </div>
 
@@ -343,64 +343,64 @@ export function Form() {
         </section>
 
         {/* TRUST LOGO CLOUD */}
-        <section className="text-center space-y-6 pt-6 relative border-t border-rose-100/30">
-          <p className="text-[10px] sm:text-xs text-stone-400 font-bold tracking-[0.2em] uppercase">
+        <section className="text-center space-y-6 pt-6 relative border-t border-[#121212]/20">
+          <p className="text-[10px] sm:text-xs text-[#121212]/60 font-bold tracking-[0.2em] uppercase">
             Designed for engineers interviewing at elite organizations
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-60 hover:opacity-85 transition-opacity">
-            <span className="font-bold text-sm sm:text-base text-stone-400 hover:text-stone-850 transition-colors cursor-default tracking-wide font-mono">Y Combinator</span>
-            <span className="font-bold text-sm sm:text-base text-stone-400 hover:text-stone-850 transition-colors cursor-default tracking-wide font-mono">Vercel</span>
-            <span className="font-bold text-sm sm:text-base text-stone-400 hover:text-stone-855 transition-colors cursor-default tracking-wide font-mono">Linear</span>
-            <span className="font-bold text-sm sm:text-base text-stone-400 hover:text-stone-855 transition-colors cursor-default tracking-wide font-mono">Stripe</span>
-            <span className="font-bold text-sm sm:text-base text-stone-400 hover:text-stone-855 transition-colors cursor-default tracking-wide font-mono">Perplexity</span>
-            <span className="font-bold text-sm sm:text-base text-stone-400 hover:text-stone-855 transition-colors cursor-default tracking-wide font-mono">OpenAI</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-75 hover:opacity-100 transition-opacity">
+            <span className="font-bold text-sm sm:text-base text-[#121212]/60 hover:text-[#ff5a1a] transition-colors cursor-default tracking-wide font-mono">Y Combinator</span>
+            <span className="font-bold text-sm sm:text-base text-[#121212]/60 hover:text-[#ff5a1a] transition-colors cursor-default tracking-wide font-mono">Vercel</span>
+            <span className="font-bold text-sm sm:text-base text-[#121212]/60 hover:text-[#ff5a1a] transition-colors cursor-default tracking-wide font-mono">Linear</span>
+            <span className="font-bold text-sm sm:text-base text-[#121212]/60 hover:text-[#ff5a1a] transition-colors cursor-default tracking-wide font-mono">Stripe</span>
+            <span className="font-bold text-sm sm:text-base text-[#121212]/60 hover:text-[#ff5a1a] transition-colors cursor-default tracking-wide font-mono">Perplexity</span>
+            <span className="font-bold text-sm sm:text-base text-[#121212]/60 hover:text-[#ff5a1a] transition-colors cursor-default tracking-wide font-mono">OpenAI</span>
           </div>
         </section>
 
         {/* HOW IT WORKS SECTION */}
         <section id="how-it-works" className="space-y-16 py-8">
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 sm:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#121212] sm:text-4xl">
               Turn Your Repositories Into Real Practice
             </h2>
-            <p className="text-[#57534e] text-sm sm:text-base font-medium font-semibold">
+            <p className="text-[#121212]/80 text-sm sm:text-base font-semibold">
               A comprehensive three-stage assessment workflow built entirely around your engineering patterns.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             {/* Step 1 */}
-            <div className="bg-white border border-rose-100/50 p-6 rounded-2xl relative space-y-4 hover:border-rose-300 transition-colors shadow-xs">
-              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-rose-100">01</div>
-              <div className="h-10 w-10 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-500">
+            <div className="border-glow-teal p-6 rounded-2xl relative space-y-4 border-brutalist-sand hover:border-[#ff5a1a] transition-all">
+              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-[#ff5a1a]/20">01</div>
+              <div className="h-10 w-10 rounded-xl bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                 <Github className="h-5 w-5" />
               </div>
-              <h4 className="text-stone-900 font-bold text-base">Connect GitHub Profile</h4>
-              <p className="text-stone-600 text-xs leading-relaxed font-medium">
+              <h4 className="text-[#121212] font-bold text-base">Connect GitHub Profile</h4>
+              <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                 Provide your GitHub handle. Our AI builds a technical blueprint of your repositories, languages, and dependencies.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="bg-white border border-rose-100/50 p-6 rounded-2xl relative space-y-4 hover:border-rose-300 transition-colors shadow-xs">
-              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-rose-100">02</div>
-              <div className="h-10 w-10 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-500">
+            <div className="border-glow-teal p-6 rounded-2xl relative space-y-4 border-brutalist-sand hover:border-[#ff5a1a] transition-all">
+              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-[#ff5a1a]/20">02</div>
+              <div className="h-10 w-10 rounded-xl bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                 <Mic className="h-5 w-5" />
               </div>
-              <h4 className="text-stone-900 font-bold text-base">Conduct Voice Interview</h4>
-              <p className="text-stone-600 text-xs leading-relaxed font-medium">
+              <h4 className="text-[#121212] font-bold text-base">Conduct Voice Interview</h4>
+              <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                 Engage in an interactive vocal mock session. The AI synthesizes logical follow-ups based on code quality and architecture decisions.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="bg-white border border-rose-100/50 p-6 rounded-2xl relative space-y-4 hover:border-rose-300 transition-colors shadow-xs">
-              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-rose-100">03</div>
-              <div className="h-10 w-10 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-500">
+            <div className="border-glow-teal p-6 rounded-2xl relative space-y-4 border-brutalist-sand hover:border-[#ff5a1a] transition-all">
+              <div className="absolute top-6 right-6 font-mono text-3xl font-extrabold text-[#ff5a1a]/20">03</div>
+              <div className="h-10 w-10 rounded-xl bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                 <FileText className="h-5 w-5" />
               </div>
-              <h4 className="text-stone-900 font-bold text-base">Hiring Evaluation Report</h4>
-              <p className="text-stone-600 text-xs leading-relaxed font-medium">
+              <h4 className="text-[#121212] font-bold text-base">Hiring Evaluation Report</h4>
+              <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                 Receive detailed scorecards detailing algorithmic strength, system design choices, and targeted recommendations for improvement.
               </p>
             </div>
@@ -410,10 +410,10 @@ export function Form() {
         {/* FEATURES GRID SECTION */}
         <section id="features" className="space-y-16 py-8">
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 sm:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#121212] sm:text-4xl">
               Engineered for High Trust & High Fidelity
             </h2>
-            <p className="text-[#57534e] text-sm sm:text-base font-medium">
+            <p className="text-[#121212]/80 text-sm sm:text-base font-semibold">
               Say goodbye to generic LeetCode puzzles. Practice interviews tailored to what you actually build.
             </p>
           </div>
@@ -422,73 +422,73 @@ export function Form() {
           <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
             
             {/* Bento Card 1: AI Codebase Audit (Col Span 3) */}
-            <div className="md:col-span-3 bg-white border border-rose-100/50 p-8 rounded-2xl flex flex-col justify-between hover:border-rose-300 transition-all border-glow-rose">
+            <div className="md:col-span-3 border-brutalist-sand p-8 rounded-2xl flex flex-col justify-between hover:border-[#ff5a1a] transition-all">
               <div className="space-y-4">
-                <div className="h-9 w-9 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+                <div className="h-9 w-9 rounded-lg bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                   <Cpu className="h-5 w-5" />
                 </div>
-                <h3 className="text-stone-900 font-bold text-lg">AI-Powered Stack Parsing</h3>
-                <p className="text-stone-600 text-xs leading-relaxed font-medium">
+                <h3 className="text-[#121212] font-bold text-lg">AI-Powered Stack Parsing</h3>
+                <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                   Our system reviews directory structures, codebase dependencies, and specific implementations. It configures the interviewer engine to grill you on performance thresholds, stack gotchas, and refactoring techniques.
                 </p>
               </div>
-              <div className="mt-8 border-t border-rose-100/40 pt-4 flex gap-4 text-[11px] text-[#57534e] font-mono font-bold">
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-rose-500" /> AST parsing</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-rose-500" /> Dependency tracing</span>
+              <div className="mt-8 border-t border-[#121212]/10 pt-4 flex gap-4 text-[11px] text-[#121212]/70 font-mono font-bold">
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[#ff5a1a]" /> AST parsing</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[#ff5a1a]" /> Dependency tracing</span>
               </div>
             </div>
 
             {/* Bento Card 2: Voice simulation (Col Span 3) */}
-            <div className="md:col-span-3 bg-white border border-rose-100/50 p-8 rounded-2xl flex flex-col justify-between hover:border-rose-350 transition-all border-glow-rose">
+            <div className="md:col-span-3 border-brutalist-sand p-8 rounded-2xl flex flex-col justify-between hover:border-[#ff5a1a] transition-all">
               <div className="space-y-4">
-                <div className="h-9 w-9 rounded-lg bg-rose-50 flex items-center justify-center text-rose-550">
+                <div className="h-9 w-9 rounded-lg bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                   <Mic className="h-5 w-5" />
                 </div>
-                <h3 className="text-stone-900 font-bold text-lg">Conversational Voice Mock</h3>
-                <p className="text-stone-600 text-xs leading-relaxed font-medium">
+                <h3 className="text-[#121212] font-bold text-lg">Conversational Voice Mock</h3>
+                <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                   Practice vocal responses in a natural environment. Integrated Speech Synthesis and Recognition lets you converse with the AI directly. Experience spontaneous, dynamically formulated follow-up questions tailored to your comments.
                 </p>
               </div>
-              <div className="mt-8 border-t border-rose-100/40 pt-4 flex gap-4 text-[11px] text-[#57534e] font-mono font-bold">
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-rose-500" /> Natural Voice (TTS)</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-rose-500" /> Audio wave visualizer</span>
+              <div className="mt-8 border-t border-[#121212]/10 pt-4 flex gap-4 text-[11px] text-[#121212]/70 font-mono font-bold">
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[#ff5a1a]" /> Natural Voice (TTS)</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[#ff5a1a]" /> Audio wave visualizer</span>
               </div>
             </div>
 
             {/* Bento Card 3: Performance Assessment scoring (Col Span 2) */}
-            <div className="md:col-span-2 bg-white border border-rose-100/50 p-6 rounded-2xl flex flex-col justify-between hover:border-rose-300 transition-all border-glow-rose">
+            <div className="md:col-span-2 border-brutalist-sand p-6 rounded-2xl flex flex-col justify-between hover:border-[#ff5a1a] transition-all">
               <div className="space-y-3">
-                <div className="h-8 w-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+                <div className="h-8 w-8 rounded-lg bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                   <BarChart3 className="h-4.5 w-4.5" />
                 </div>
-                <h3 className="text-stone-900 font-bold text-base">Hiring Scorecard</h3>
-                <p className="text-stone-600 text-xs leading-relaxed font-medium">
+                <h3 className="text-[#121212] font-bold text-base">Hiring Scorecard</h3>
+                <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                   Evaluate your performance with a standardized hiring-style report card covering Code Quality, Scalability, Algorithms, and verbal communication.
                 </p>
               </div>
             </div>
 
             {/* Bento Card 4: Technical evaluation metrics (Col Span 2) */}
-            <div className="md:col-span-2 bg-white border border-rose-100/50 p-6 rounded-2xl flex flex-col justify-between hover:border-rose-300 transition-all border-glow-rose">
+            <div className="md:col-span-2 border-brutalist-sand p-6 rounded-2xl flex flex-col justify-between hover:border-[#ff5a1a] transition-all">
               <div className="space-y-3">
-                <div className="h-8 w-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+                <div className="h-8 w-8 rounded-lg bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                   <TrendingUp className="h-4.5 w-4.5" />
                 </div>
-                <h3 className="text-stone-900 font-bold text-base">Performance Analytics</h3>
-                <p className="text-stone-600 text-xs leading-relaxed font-medium">
+                <h3 className="text-[#121212] font-bold text-base">Performance Analytics</h3>
+                <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                   Understand your technical benchmarks. Find out whether your projects map to junior, mid-level, or senior hiring criteria.
                 </p>
               </div>
             </div>
 
             {/* Bento Card 5: Improvement Areas (Col Span 2) */}
-            <div className="md:col-span-2 bg-white border border-rose-100/50 p-6 rounded-2xl flex flex-col justify-between hover:border-rose-300 transition-all border-glow-rose">
+            <div className="md:col-span-2 border-brutalist-sand p-6 rounded-2xl flex flex-col justify-between hover:border-[#ff5a1a] transition-all">
               <div className="space-y-3">
-                <div className="h-8 w-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+                <div className="h-8 w-8 rounded-lg bg-[#e6e4d5] border border-[#121212] flex items-center justify-center text-[#ff5a1a]">
                   <Award className="h-4.5 w-4.5" />
                 </div>
-                <h3 className="text-stone-900 font-bold text-base">Targeted Feedback</h3>
-                <p className="text-stone-600 text-xs leading-relaxed font-medium">
+                <h3 className="text-[#121212] font-bold text-base">Targeted Feedback</h3>
+                <p className="text-[#121212]/80 text-xs leading-relaxed font-semibold">
                   Identify syntax weaknesses, gaps in testing coverage, and concurrency issues, and receive precise project recommendations.
                 </p>
               </div>
@@ -500,27 +500,27 @@ export function Form() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full mt-24 border-t border-rose-100/50 bg-white/80 py-12">
+      <footer className="relative z-10 w-full mt-24 border-t border-[#121212] bg-[#dfdcce] py-12 text-[#121212]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
+            <div className="h-7 w-7 rounded-lg bg-[#ff5a1a] border border-[#121212] flex items-center justify-center shadow-sm">
               <Cpu className="h-4 w-4 text-white" />
             </div>
-            <span className="font-extrabold text-md tracking-tight text-stone-850">
-              DevPrep<span className="text-rose-500 font-semibold">.ai</span>
+            <span className="font-extrabold text-md tracking-tight text-[#121212]">
+              SkillWise<span className="text-[#ff5a1a] font-semibold">.ai</span>
             </span>
           </div>
 
-          <p className="text-stone-500 text-xs font-semibold">
-            © {new Date().getFullYear()} DevPrep.ai. All rights reserved. Premium Mock Sandbox.
+          <p className="text-[#121212]/70 text-xs font-bold">
+            © {new Date().getFullYear()} SkillWise.ai. All rights reserved. Premium Mock Sandbox.
           </p>
 
-          <div className="flex items-center gap-6 text-xs text-stone-550 font-bold">
-            <a href="#features" className="hover:text-rose-500 transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-rose-500 transition-colors">How it Works</a>
-            <span className="text-stone-300">|</span>
-            <span className="text-stone-500 flex items-center gap-1">
-              <Globe className="h-3.5 w-3.5 text-rose-500" />
+          <div className="flex items-center gap-6 text-xs text-[#121212]/80 font-bold">
+            <a href="#features" className="hover:text-[#ff5a1a] transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-[#ff5a1a] transition-colors">How it Works</a>
+            <span className="text-[#121212]/20">|</span>
+            <span className="text-[#121212] flex items-center gap-1">
+              <Globe className="h-3.5 w-3.5 text-[#ff5a1a]" />
               US East Sandbox
             </span>
           </div>

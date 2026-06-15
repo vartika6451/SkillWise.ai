@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -36,6 +37,7 @@ model Interview {
   updatedAt   DateTime @updatedAt
 
   questions   Question[]
+  assessment  String?
 }
 
 model Question {

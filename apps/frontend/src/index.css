@@ -6,16 +6,16 @@
   }
 
   body {
-    @apply min-h-screen m-0 bg-[#fcf8f6] text-[#292524];
+    @apply min-h-screen m-0 bg-[#7a7dcd] text-[#121212];
   }
 }
 
-/* Elegant Warm SaaS grids and glowing orb background */
+/* Elegant Periwinkle Grid Mesh and accent background */
 .bg-grid-pattern {
   background-size: 60px 60px;
   background-image: 
-    linear-gradient(to right, rgba(244, 63, 94, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(244, 63, 94, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
 }
 
 .glow-orb {
@@ -28,11 +28,11 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    opacity: 0.35;
+    opacity: 0.15;
     transform: scale(1);
   }
   50% {
-    opacity: 0.55;
+    opacity: 0.35;
     transform: scale(1.1);
   }
 }
@@ -68,15 +68,19 @@
   animation: spin-slow 20s linear infinite;
 }
 
-/* Premium Card Border Glow Rose effect */
-.border-glow-rose {
-  border: 1px solid rgba(244, 63, 94, 0.12);
-  box-shadow: 0 4px 20px -2px rgba(244, 63, 94, 0.04), 0 0 15px -8px rgba(244, 63, 94, 0.02);
+/* Brutalist Card Styling in Beige/Sand with Black Borders */
+.border-brutalist-sand {
+  border: 1px solid #121212;
+  background-color: #dfdcce;
+  box-shadow: 0 4px 12px -2px rgba(18, 18, 18, 0.05);
 }
 
-.border-glow-rose:hover {
-  border-color: rgba(244, 63, 94, 0.28);
-  box-shadow: 0 10px 30px -5px rgba(244, 63, 94, 0.08), 0 0 20px -3px rgba(244, 63, 94, 0.05);
+.border-brutalist-sand:hover {
+  border-color: #ff5a1a;
+  box-shadow: 0 6px 16px -2px rgba(18, 18, 18, 0.08);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+
 
 
