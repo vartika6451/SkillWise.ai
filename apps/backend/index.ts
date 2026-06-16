@@ -678,7 +678,7 @@ function listRoutes(expressApp: express.Express) {
 }
 
 // 5. Start app and handle port binding errors
-const PORT = 3001;
+const PORT = Number(process.env.PORT || 3001);
 const server = app.listen(PORT, () => {
     console.log(`✅ Server successfully bound and listening on port ${PORT}`);
     listRoutes(app);
