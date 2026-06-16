@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import axios from "axios";
-import { BACKEND_URL } from "@/lib/config";
+import { API_BASE_URL } from "@/lib/config";
 import { Button } from "./button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "./card";
 import { 
@@ -431,7 +431,7 @@ export function Interview() {
     async function fetchInterview() {
       try {
         setLoading(true);
-        const res = await axios.get(`${BACKEND_URL}/api/v1/interview/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/v1/interview/${id}`);
         if (res.data) {
           if (res.data.githubMetaData) {
             try {
@@ -620,7 +620,7 @@ export function Interview() {
     const lastQuestion = history.filter(h => h.role === "assistant").pop()?.text || "";
     const saveQuestion = async (exprMetrics?: any) => {
       try {
-        await axios.post(`${BACKEND_URL}/api/v1/interview/${id}/question`, {
+        await axios.post(`${API_BASE_URL}/api/v1/interview/${id}/question`, {
           question: lastQuestion,
           answer: finalAnswerText,
           feedback: JSON.stringify({ 
@@ -691,7 +691,7 @@ Ask EXACTLY ONE follow-up question. Do not ask generic interview questions if pr
 Keep your response short (2-3 sentences), professional, and encouraging.`;
       }
 
-      const response = await axios.post(`${BACKEND_URL}/chat`, {
+      const response = await axios.post(`${API_BASE_URL}/chat`, {
         message: fullPrompt,
         image: snapshot || undefined
       });
@@ -789,7 +789,7 @@ Keep your response short (2-3 sentences), professional, and encouraging.`;
         metricsPerQuestion: metrics
       };
 
-      const res = await axios.post(`${BACKEND_URL}/api/v1/interview/${id}/assess`, {
+      const res = await axios.post(`${API_BASE_URL}/api/v1/interview/${id}/assess`, {
         speechStats: overallStats
       });
 

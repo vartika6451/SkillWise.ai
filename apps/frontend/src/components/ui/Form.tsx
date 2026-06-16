@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router";
 import axios from "axios";
-import { BACKEND_URL } from "@/lib/config";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
 import { 
   Cpu, Layers, Mic, FileText, Check, ArrowRight, 
@@ -104,7 +104,7 @@ export function Form() {
     }
 
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/v1/pre-interview`, {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/pre-interview`, {
         github: username,
         resume: resumeBase64 ? {
           base64: resumeBase64,
