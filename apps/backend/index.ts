@@ -255,6 +255,51 @@ function parseResumeFallback(rawText: string, fileName: string) {
     return result;
 }
 
+app.get("/api/v1/github/repos", async (req, res) => {
+    const { username } = req.query;
+    if (!username || typeof username !== "string") {
+        return res.status(400).json({ message: "Username is required" });
+    }
+
+    const githubUsername = (() => {
+        let cleaned = username.trim();
+        if (cleaned.includes("github.com/")) {
+            const parts = cleaned.split("github.com/")[1];
+            if (parts) {
+                const u = parts.split("/")[0]?.trim();
+                if (u) return u;
+            }
+        }
+        const segments = cleaned.split("/").filter(s => s.trim().length > 0);
+        return segments[0]?.trim() || cleaned;
+    })();
+
+    if (!githubUsername) {
+        return res.status(400).json({ message: "Invalid GitHub username or URL" });
+    }
+
+    try {
+        console.log(`Scraping GitHub repos for preview: ${githubUsername}`);
+        const repos = await scrapeGithub(githubUsername);
+        return res.json({ repos });
+    } catch (scrapeErr: any) {
+        console.error("❌ GitHub scraping failed for preview:", scrapeErr.response?.data || scrapeErr.message || scrapeErr);
+        if (scrapeErr.response?.status === 404) {
+            return res.status(404).json({
+                message: `GitHub user "${githubUsername}" not found. Please verify the username.`
+            });
+        }
+        if (scrapeErr.response?.status === 403) {
+            return res.status(403).json({
+                message: "GitHub API rate limit exceeded. Please configure GITHUB_TOKEN or try again later."
+            });
+        }
+        return res.status(400).json({
+            message: `Failed to fetch GitHub profile: ${scrapeErr.response?.data?.message || scrapeErr.message}`
+        });
+    }
+});
+
 app.post("/api/v1/pre-interview", async (req, res) => {
     const parsed = PreInterviewBody.safeParse(req.body);
 
@@ -305,6 +350,11 @@ app.post("/api/v1/pre-interview", async (req, res) => {
             return res.status(400).json({
                 message: `Failed to fetch GitHub profile: ${scrapeErr.response?.data?.message || scrapeErr.message}`
             });
+        }
+
+        // If selectedRepos is provided, filter the repositories
+        if (data.selectedRepos && data.selectedRepos.length > 0) {
+            githubData = githubData.filter((repo: any) => data.selectedRepos?.includes(repo.name));
         }
 
         let resumeMetaData = null;

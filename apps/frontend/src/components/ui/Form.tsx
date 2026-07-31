@@ -5,9 +5,9 @@ import axios from "axios";
 import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
 import { 
-  Cpu, Layers, Mic, FileText, Check, ArrowRight, 
+  Cpu, Layers, Mic, FileText, Check, ArrowRight, ArrowLeft,
   Sparkles, Shield, Terminal, Award, Activity, TrendingUp, 
-  BarChart3, Globe, CheckCircle2, User, Loader2
+  BarChart3, Globe, CheckCircle2, User, Loader2, Search, Star
 } from "lucide-react";
 
 // Local Github icon fallback for compatibility
@@ -35,6 +35,12 @@ export function Form() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeBase64, setResumeBase64] = useState<string>("");
   const navigate = useNavigate();
+
+  const [step, setStep] = useState<"username" | "select-repos">("username");
+  const [repos, setRepos] = useState<any[] | null>(null);
+  const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
+  const [fetchingRepos, setFetchingRepos] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Validate GitHub URL format
   function validateGithubUrl(url: string) {
@@ -81,17 +87,25 @@ export function Form() {
     reader.readAsDataURL(file);
   };
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    const error = validateGithubUrl(github);
-    if (error) {
-      setValidationError(error);
-      toast.error(error);
-      return;
-    }
+  const handleToggleRepo = (repoName: string) => {
+    setSelectedRepos(prev => 
+      prev.includes(repoName)
+        ? prev.filter(name => name !== repoName)
+        : [...prev, repoName]
+    );
+  };
 
-    setLoading(true);
-    // Extrapolate username if it's a full URL
+  const handleSelectAll = () => {
+    if (repos) {
+      setSelectedRepos(repos.map(r => r.name));
+    }
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedRepos([]);
+  };
+
+  function getCleanUsername() {
     let username = github.trim();
     if (username.includes("github.com/")) {
       const parts = username.split("github.com/");
@@ -102,10 +116,56 @@ export function Form() {
         }
       }
     }
+    return username;
+  }
+
+  async function handleFetchRepos(e: FormEvent) {
+    e.preventDefault();
+    const error = validateGithubUrl(github);
+    if (error) {
+      setValidationError(error);
+      toast.error(error);
+      return;
+    }
+
+    setFetchingRepos(true);
+    setValidationError("");
+    const username = getCleanUsername();
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/github/repos`, {
+        params: { username }
+      });
+      const fetchedRepos = response.data.repos || [];
+      setRepos(fetchedRepos);
+      setSelectedRepos(fetchedRepos.map((r: any) => r.name));
+      setStep("select-repos");
+      setFetchingRepos(false);
+      toast.success(`Scraped ${fetchedRepos.length} repositories. Please select which are important.`);
+    } catch (err: any) {
+      console.error(err);
+      const msg = err.response?.data?.message || "Error scraping repository list. Ensure the user exists.";
+      toast.error(msg);
+      setFetchingRepos(false);
+    }
+  }
+
+  async function handleStartInterview(e: FormEvent) {
+    e.preventDefault();
+    if (selectedRepos.length === 0) {
+      setValidationError("Please select at least one important repository to proceed.");
+      toast.error("Please select at least one repository.");
+      return;
+    }
+
+    setLoading(true);
+    setValidationError("");
+    const username = getCleanUsername();
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/v1/pre-interview`, {
         github: username,
+        selectedRepos: selectedRepos,
         resume: resumeBase64 ? {
           base64: resumeBase64,
           fileName: resumeFile?.name || "resume.pdf",
@@ -117,7 +177,6 @@ export function Form() {
         toast.success("Successfully processed profile & resume! Launching interview...", {
           description: `Loaded profile for ${username}`
         });
-        // Short delay to build excitement
         setTimeout(() => {
           navigate(`/interview/${interviewId}`);
         }, 1500);
@@ -125,9 +184,9 @@ export function Form() {
         toast.error("Failed to initialize interview session.");
         setLoading(false);
       }
-    } catch (error: any) {
-      console.error(error);
-      const msg = error.response?.data?.message || "Error scraping repository data. Ensure the user exists.";
+    } catch (err: any) {
+      console.error(err);
+      const msg = err.response?.data?.message || "Error starting interview session.";
       toast.error(msg);
       setLoading(false);
     }
@@ -209,73 +268,220 @@ export function Form() {
                 Enter your GitHub username or profile URL below. Our system builds a structural evaluation profile based on your public projects.
               </p>
 
-              <form onSubmit={onSubmit} className="space-y-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <span className="text-[#121212]/60 text-xs font-bold">github.com/</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={github}
-                    onChange={(e) => handleGithubChange(e.target.value)}
-                    placeholder="username"
-                    disabled={loading}
-                    className="w-full bg-[#e6e4d5] border border-[#121212] rounded-xl pl-[96px] pr-4 py-3.5 text-sm text-[#121212] placeholder-stone-500/50 focus:outline-none focus:border-[#ff5a1a] focus:ring-1 focus:ring-[#ff5a1a]/30 transition-all font-semibold"
-                  />
-                </div>
-                {validationError && (
-                  <p className="text-red-650 text-xs font-bold mt-1 flex items-center gap-1">
-                    ● {validationError}
-                  </p>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold text-[#121212] block">
-                    Upload Resume (PDF or TXT, optional)
-                  </label>
-                  <div className="relative border-2 border-dashed border-[#121212]/30 hover:border-[#ff5a1a] rounded-xl p-4 bg-[#e6e4d5] hover:bg-[#dfdcce] transition-all flex flex-col items-center justify-center cursor-pointer group">
-                    <input 
-                      type="file" 
-                      accept=".pdf,.txt" 
-                      onChange={handleFileChange}
-                      disabled={loading}
-                      className="absolute inset-0 opacity-0 cursor-pointer disabled:pointer-events-none"
+              {step === "username" ? (
+                <form onSubmit={handleFetchRepos} className="space-y-4">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <span className="text-[#121212]/60 text-xs font-bold">github.com/</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={github}
+                      onChange={(e) => handleGithubChange(e.target.value)}
+                      placeholder="username"
+                      disabled={fetchingRepos}
+                      className="w-full bg-[#e6e4d5] border border-[#121212] rounded-xl pl-[96px] pr-4 py-3.5 text-sm text-[#121212] placeholder-stone-500/50 focus:outline-none focus:border-[#ff5a1a] focus:ring-1 focus:ring-[#ff5a1a]/30 transition-all font-semibold"
                     />
-                    <FileText className="h-6 w-6 text-[#ff5a1a] mb-2 group-hover:scale-110 transition-transform" />
-                    {resumeFile ? (
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-[#121212]">{resumeFile.name}</p>
-                        <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
-                          {(resumeFile.size / 1024).toFixed(1)} KB • Click to change
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-stone-600">Drag & drop or click to upload</p>
-                        <p className="text-[10px] text-stone-500 font-semibold mt-0.5">PDF or TXT up to 5MB</p>
-                      </div>
-                    )}
                   </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl bg-[#ff5a1a] hover:bg-[#e04f14] text-white border border-[#121212] font-bold text-sm tracking-wide shadow-xs transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      Analyzing Repositories...
-                    </>
-                  ) : (
-                    <>
-                      Generate Tailored Interview
-                      <ArrowRight className="h-4 w-4" />
-                    </>
+                  {validationError && (
+                    <p className="text-red-650 text-xs font-bold mt-1 flex items-center gap-1">
+                      ● {validationError}
+                    </p>
                   )}
-                </button>
-              </form>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-extrabold text-[#121212] block">
+                      Upload Resume (PDF or TXT, optional)
+                    </label>
+                    <div className="relative border-2 border-dashed border-[#121212]/30 hover:border-[#ff5a1a] rounded-xl p-4 bg-[#e6e4d5] hover:bg-[#dfdcce] transition-all flex flex-col items-center justify-center cursor-pointer group">
+                      <input 
+                        type="file" 
+                        accept=".pdf,.txt" 
+                        onChange={handleFileChange}
+                        disabled={fetchingRepos}
+                        className="absolute inset-0 opacity-0 cursor-pointer disabled:pointer-events-none"
+                      />
+                      <FileText className="h-6 w-6 text-[#ff5a1a] mb-2 group-hover:scale-110 transition-transform" />
+                      {resumeFile ? (
+                        <div className="text-center">
+                          <p className="text-xs font-bold text-[#121212]">{resumeFile.name}</p>
+                          <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
+                            {(resumeFile.size / 1024).toFixed(1)} KB • Click to change
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <p className="text-xs font-bold text-stone-600">Drag & drop or click to upload</p>
+                          <p className="text-[10px] text-stone-500 font-semibold mt-0.5">PDF or TXT up to 5MB</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={fetchingRepos}
+                    className="w-full py-3.5 px-6 rounded-xl bg-[#ff5a1a] hover:bg-[#e04f14] text-white border border-[#121212] font-bold text-sm tracking-wide shadow-xs transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {fetchingRepos ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        Scanning Repositories...
+                      </>
+                    ) : (
+                      <>
+                        Scan Repositories
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleStartInterview} className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#121212]/10 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => setStep("username")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#e6e4d5] border border-[#121212] hover:bg-[#dfdcce] text-[10px] font-extrabold text-[#121212] transition-all"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5 text-[#ff5a1a]" />
+                      Back
+                    </button>
+                    <span className="text-[11px] font-bold text-[#121212]/75 font-mono">
+                      {github}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-extrabold text-[#121212] flex justify-between items-center">
+                      <span>Select Important Repositories</span>
+                      <span className="text-[10px] font-mono font-bold text-[#ff5a1a] bg-[#ff5a1a]/10 border border-[#ff5a1a]/20 px-2 py-0.5 rounded">
+                        {selectedRepos.length} / {repos?.length || 0}
+                      </span>
+                    </label>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="px-2.5 py-1 text-[10px] font-extrabold rounded-md bg-[#e6e4d5] border border-[#121212] hover:bg-[#dfdcce] text-[#121212] transition-all"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeselectAll}
+                        className="px-2.5 py-1 text-[10px] font-extrabold rounded-md bg-[#e6e4d5] border border-[#121212] hover:bg-[#dfdcce] text-[#121212] transition-all"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#121212]/60" />
+                      <input
+                        type="text"
+                        placeholder="Search repos by name or stack..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-[#e6e4d5] border border-[#121212] rounded-lg pl-9 pr-3 py-2 text-xs text-[#121212] placeholder-stone-500/50 focus:outline-none focus:border-[#ff5a1a] transition-all font-semibold"
+                      />
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto custom-scrollbar pr-1 space-y-2 mt-2">
+                      {repos && repos.filter(repo => 
+                        repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        (repo.description && repo.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                        (repo.language && repo.language.toLowerCase().includes(searchQuery.toLowerCase()))
+                      ).length > 0 ? (
+                        repos.filter(repo => 
+                          repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (repo.description && repo.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (repo.language && repo.language.toLowerCase().includes(searchQuery.toLowerCase()))
+                        ).map((repo) => {
+                          const isChecked = selectedRepos.includes(repo.name);
+                          return (
+                            <div
+                              key={repo.name}
+                              onClick={() => handleToggleRepo(repo.name)}
+                              className={`p-3 rounded-xl border border-[#121212] text-left cursor-pointer transition-all flex items-start gap-3 select-none ${
+                                isChecked 
+                                  ? "bg-[#ff5a1a]/10 border-[#ff5a1a] shadow-xs" 
+                                  : "bg-[#e6e4d5] hover:bg-[#dfdcce] opacity-80"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {}} 
+                                className="mt-0.5 h-3.5 w-3.5 accent-[#ff5a1a] flex-shrink-0 cursor-pointer"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-extrabold text-xs text-[#121212] truncate flex items-center gap-1.5">
+                                    {repo.name}
+                                    {repo.isContribution && (
+                                      <span className="px-1.5 py-0.5 rounded bg-[#ff5a1a]/20 border border-[#ff5a1a]/30 text-[9px] font-extrabold text-[#ff5a1a] uppercase tracking-wider flex-shrink-0">
+                                        Contributed
+                                      </span>
+                                    )}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 flex-shrink-0 text-[10px] font-bold text-[#121212]/75">
+                                    {repo.language && (
+                                      <span className="px-1.5 py-0.5 rounded bg-white/60 border border-[#121212]/15">
+                                        {repo.language}
+                                      </span>
+                                    )}
+                                    {repo.stars !== undefined && (
+                                      <span className="flex items-center gap-0.5 bg-white/60 border border-[#121212]/15 px-1 py-0.5 rounded">
+                                        <Star className="h-2.5 w-2.5 text-[#ff5a1a] fill-[#ff5a1a]/20" />
+                                        {repo.stars}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {repo.description && (
+                                  <p className="text-[10px] text-[#121212]/75 mt-1 font-semibold line-clamp-2 leading-relaxed">
+                                    {repo.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-8 text-center text-xs font-semibold text-stone-500">
+                          No matching repositories found.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {validationError && (
+                    <p className="text-red-650 text-xs font-bold mt-1 flex items-center gap-1">
+                      ● {validationError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading || selectedRepos.length === 0}
+                    className="w-full py-3.5 px-6 rounded-xl bg-[#ff5a1a] hover:bg-[#e04f14] text-white border border-[#121212] font-bold text-sm tracking-wide shadow-xs transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        Initializing Mock Session...
+                      </>
+                    ) : (
+                      <>
+                        Start Custom Interview
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
 
               <div className="mt-5 flex items-center justify-between text-[11px] text-[#121212]/75 border-t border-[#121212]/15 pt-4">
                 <span className="flex items-center gap-1.5 font-bold">
